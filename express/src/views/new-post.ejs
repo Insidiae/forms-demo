@@ -1,0 +1,76 @@
+<% const formErrors = status === "error" ? errors._errors : null %> <% const
+fieldErrors = status === "error" ? errors.fieldErrors : null %> <% const
+tagsList = submission?.tags ?? [] %>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create New Post | Forms Demo</title>
+  </head>
+  <body>
+    <h1>Create New Post</h1>
+    <form action="/posts" method="post">
+      <button
+        name="intent"
+        value="submit"
+        type="submit"
+        style="display: none"
+      ></button>
+      <div>
+        <label htmlFor="title">Title</label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          autofocus
+          value="<%=submission?.title %>"
+        />
+        <div>
+          <% if(fieldErrors?.title) { %> <%- include("partials/error-list", {
+          errors: fieldErrors.title, id: "errors-title" }) %> <% } %>
+        </div>
+      </div>
+      <div>
+        <label for="tags">Tags</label>
+        <ul id="tags">
+          <%_tagsList.forEach((tag, idx) => { %>
+          <li>
+            <input
+              type="text"
+              name="tags[<%=idx %>]"
+              id="tags[<%=idx %>]"
+              value="<%=tag %>"
+            />
+            <button type="submit" name="intent" value="list-remove/<%=idx %>">
+              ❌
+            </button>
+          </li>
+          <%_ })%>
+        </ul>
+        <div>
+          <% if(fieldErrors?.tags) { %> <%- include("partials/error-list", {
+          errors: fieldErrors.tags, id: "errors-tags" }) %> <% } %>
+        </div>
+        <%_if (tagsList.length < 5) { %>
+        <button type="submit" name="intent" value="list-insert">
+          + Add Tag
+        </button>
+        <%_ } %>
+      </div>
+      <div>
+        <label htmlFor="content">Content</label>
+        <textarea name="content" id="content">
+<%=submission?.content %></textarea
+        >
+        <div>
+          <% if(fieldErrors?.content) { %> <%- include("partials/error-list", {
+          errors: fieldErrors.content, id: "errors-content" }) %> <% } %>
+        </div>
+      </div>
+      <% if(formErrors) { %> <%- include("partials/error-list", { errors:
+      formErrors, id: "errors-form" }) %> <% } %>
+      <button name="intent" value="submit" type="submit">Submit</button>
+    </form>
+  </body>
+</html>

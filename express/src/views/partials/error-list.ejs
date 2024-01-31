@@ -1,0 +1,7 @@
+<% if(errors.length) { %>
+<ul id="<%=id %>">
+  <% for (const error of errors) { %>
+  <li style="color: red"><%=error %></li>
+  <% } %>
+</ul>
+<% } %>
