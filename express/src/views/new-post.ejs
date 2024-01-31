@@ -6,16 +6,17 @@ tagsList = submission?.tags ?? [] %>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/styles.css" />
     <title>Create New Post | Forms Demo</title>
   </head>
   <body>
-    <h1>Create New Post</h1>
+    <h1 class="text-2xl font-bold">Create New Post</h1>
     <form action="/posts" method="post">
       <button
         name="intent"
         value="submit"
         type="submit"
-        style="display: none"
+        class="hidden"
       ></button>
       <div>
         <label htmlFor="title">Title</label>
