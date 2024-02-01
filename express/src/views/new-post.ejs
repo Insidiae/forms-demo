@@ -10,38 +10,40 @@ tagsList = submission?.tags ?? [] %>
     <title>Create New Post | Forms Demo</title>
   </head>
   <body>
-    <h1 class="text-2xl font-bold">Create New Post</h1>
-    <form action="/posts" method="post">
-      <button
-        name="intent"
-        value="submit"
-        type="submit"
-        class="hidden"
-      ></button>
-      <div>
-        <label htmlFor="title">Title</label>
+    <div class="mx-auto flex max-w-lg flex-col gap-8 p-8">
+      <a href="/posts">
+        <h1 class="text-3xl font-bold">&larr; New Post</h1>
+      </a>
+      <form action="/posts" method="post" class="flex flex-col gap-2">
+        <button
+          name="intent"
+          value="submit"
+          type="submit"
+          class="hidden"
+        ></button>
+        <label htmlFor="title" class="text-lg font-medium">Title</label>
         <input
           type="text"
           id="title"
           name="title"
-          autofocus
           value="<%=submission?.title %>"
+          class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          autofocus
         />
-        <div>
+        <div class="min-h-[32px] px-4 pb-3 pt-1">
           <% if(fieldErrors?.title) { %> <%- include("partials/error-list", {
           errors: fieldErrors.title, id: "errors-title" }) %> <% } %>
         </div>
-      </div>
-      <div>
-        <label for="tags">Tags</label>
-        <ul id="tags">
+        <label for="tags" class="text-lg font-medium">Tags</label>
+        <ul id="tags" class="flex flex-col gap-2">
           <%_tagsList.forEach((tag, idx) => { %>
-          <li>
+          <li class="flex items-center gap-2">
             <input
               type="text"
               name="tags[<%=idx %>]"
               id="tags[<%=idx %>]"
               value="<%=tag %>"
+              class="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"
             />
             <button type="submit" name="intent" value="list-remove/<%=idx %>">
               ❌
@@ -49,29 +51,43 @@ tagsList = submission?.tags ?? [] %>
           </li>
           <%_ })%>
         </ul>
-        <div>
-          <% if(fieldErrors?.tags) { %> <%- include("partials/error-list", {
-          errors: fieldErrors.tags, id: "errors-tags" }) %> <% } %>
-        </div>
         <%_if (tagsList.length < 5) { %>
-        <button type="submit" name="intent" value="list-insert">
+        <button
+          type="submit"
+          name="intent"
+          value="list-insert"
+          class="self-start rounded-full bg-blue-600 px-4 py-2 text-xs text-center text-white disabled:bg-blue-400"
+        >
           + Add Tag
         </button>
         <%_ } %>
-      </div>
-      <div>
-        <label htmlFor="content">Content</label>
-        <textarea name="content" id="content">
+        <div class="min-h-[32px] px-4 pb-3 pt-1">
+          <% if(fieldErrors?.tags) { %> <%- include("partials/error-list", {
+          errors: fieldErrors.tags, id: "errors-tags" }) %> <% } %>
+        </div>
+        <label htmlFor="content" class="text-lg font-medium">Content</label>
+        <textarea
+          name="content"
+          id="content"
+          class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+        >
 <%=submission?.content %></textarea
         >
-        <div>
+        <div class="min-h-[32px] px-4 pb-3 pt-1">
           <% if(fieldErrors?.content) { %> <%- include("partials/error-list", {
           errors: fieldErrors.content, id: "errors-content" }) %> <% } %>
         </div>
-      </div>
-      <% if(formErrors) { %> <%- include("partials/error-list", { errors:
-      formErrors, id: "errors-form" }) %> <% } %>
-      <button name="intent" value="submit" type="submit">Submit</button>
-    </form>
+        <% if(formErrors) { %> <%- include("partials/error-list", { errors:
+        formErrors, id: "errors-form" }) %> <% } %>
+        <button
+          name="intent"
+          value="submit"
+          type="submit"
+          class="flex items-center justify-center gap-2 rounded-full bg-blue-600 py-2 text-center text-white disabled:bg-blue-400"
+        >
+          Submit
+        </button>
+      </form>
+    </div>
   </body>
 </html>

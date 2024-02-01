@@ -1,7 +1,7 @@
 <% if(errors.length) { %>
-<ul id="<%=id %>">
+<ul id="<%=id %>" class="flex flex-col gap-1">
   <% for (const error of errors) { %>
-  <li style="color: red"><%=error %></li>
+  <li class="text-sm text-red-600"><%=error %></li>
   <% } %>
 </ul>
 <% } %>

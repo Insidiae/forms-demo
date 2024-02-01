@@ -2,7 +2,6 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import path from "path";
-import ejs from "ejs";
 
 import postsRoutes from "./routes/posts";
 
@@ -11,13 +10,13 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "dist")));
 app.use(express.urlencoded({ extended: true }));
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Express + TypeScript Server");
+app.get("/", (req, res) => {
+  return res.redirect("/posts");
 });
 
 app.use("/posts", postsRoutes);

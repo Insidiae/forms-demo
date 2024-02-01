@@ -1,9 +1,11 @@
 import express from "express";
 import { z } from "zod";
+import { PrismaClient } from "@prisma/client";
 
 import { invariant } from "../utils/misc";
 
 const router = express.Router();
+const prisma = new PrismaClient();
 
 const titleMaxLength = 100;
 const tagMaxLength = 25;
@@ -11,18 +13,33 @@ const contentMaxLength = 10000;
 
 const PostEditorSchema = z.object({
   title: z.string().min(1).max(titleMaxLength),
-  tags: z.array(z.string().min(1).max(tagMaxLength)).optional(),
+  tags: z
+    .array(z.string().min(1).max(tagMaxLength))
+    .optional()
+    //? Can't store arrays in SQLite, so just turn em into a comma-separated string
+    .transform((val) => (val ? val.join(",") : null)),
   content: z.string().min(1).max(contentMaxLength),
 });
 
 router
   .route("/")
-  .get((req, res) => {
-    return res.render("posts-list");
+  .get(async (req, res) => {
+    const posts = await prisma.post.findMany({
+      select: {
+        title: true,
+        tags: true,
+        content: true,
+      },
+    });
+
+    return res.render("posts-list", { posts });
   })
-  .post((req, res) => {
+  .post(async (req, res) => {
+    //! Express doesn't have req.formData(), instead we use
+    //! its built-in body parser to get submission values directly in req.body
     const formData = req.body;
 
+    //? This means we also get values using formData.[fieldName] instead of formData.get(fieldName)
     const title = formData.title;
     const content = formData.content;
     const intent = formData.intent;
@@ -63,6 +80,10 @@ router
           errors: result.error.flatten(),
         });
       }
+
+      await prisma.post.create({
+        data: result.data,
+      });
 
       return res.redirect("/posts");
     }

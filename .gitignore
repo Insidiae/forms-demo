@@ -8,3 +8,10 @@ wrangler.toml
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+dist/
+dev.db
+dev.db-journal
+
+# Keep environment variables out of version control
+.env
