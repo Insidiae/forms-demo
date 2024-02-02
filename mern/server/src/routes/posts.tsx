@@ -20,6 +20,7 @@ export const PostEditorSchema = z.object({
 posts.get("/", async (c) => {
   const posts = await prisma.post.findMany({
     select: {
+      id: true,
       title: true,
       tags: true,
       content: true,
@@ -91,7 +92,7 @@ posts.post("/", async (c) => {
       },
     });
 
-    return c.redirect("/posts");
+    return c.json({ status: "success" });
   }
 });
 

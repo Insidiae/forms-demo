@@ -1,9 +1,11 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 
 import { posts } from "./routes/posts";
 
 const app = new Hono();
+app.use("*", cors());
 
 app.get("/", (c) => {
   return c.redirect("/posts");
