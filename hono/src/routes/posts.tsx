@@ -1,23 +1,34 @@
 import { Hono } from "hono";
-import type { FC } from "hono/jsx";
 import { z } from "zod";
+import { PrismaClient } from "@prisma/client";
 
-import { Layout } from "../components/Layout";
-import { ErrorList } from "../components/ErrorList";
+import { NewPost } from "../components/views/NewPost";
+import { PostList } from "../components/views/PostList";
 import { invariant } from "../utils/misc";
 
 export const posts = new Hono();
+const prisma = new PrismaClient();
 
 const titleMaxLength = 100;
+const tagMaxLength = 25;
 const contentMaxLength = 10000;
 
-const PostEditorSchema = z.object({
+export const PostEditorSchema = z.object({
   title: z.string().min(1).max(titleMaxLength),
+  tags: z.array(z.string().min(1).max(tagMaxLength)).optional(),
   content: z.string().min(1).max(contentMaxLength),
 });
 
-posts.get("/", (c) => {
-  return c.html(<PostList />);
+posts.get("/", async (c) => {
+  const posts = await prisma.post.findMany({
+    select: {
+      title: true,
+      tags: true,
+      content: true,
+    },
+  });
+
+  return c.html(<PostList posts={posts} />);
 });
 
 posts.post("/", async (c) => {
@@ -26,98 +37,67 @@ posts.post("/", async (c) => {
 
   const title = formData.get("title");
   const content = formData.get("content");
+  const intent = formData.get("intent");
 
-  console.log({ intent: formData.get("intent") });
+  let tags: string[] = [];
+  for (let [key, value] of formData.entries()) {
+    if (key.startsWith("tags[") && key.endsWith("]")) {
+      //? Get the index number, e.g. tags[1] -> 1
+      const index = +key.slice(5, -1);
+      tags[index] = value;
+    }
+  }
 
+  invariant(typeof intent === "string", "intent must be a string");
   invariant(typeof title === "string", "Title must be a string");
   invariant(typeof content === "string", "Content must be a string");
 
-  const result = PostEditorSchema.safeParse({
-    title,
-    content,
-  });
-
-  if (!result.success) {
-    const submission = { title, content };
+  if (intent.startsWith("list-insert")) {
+    tags.push("");
     return c.html(
-      <NewPost
-        status="error"
-        errors={result.error.flatten()}
-        submission={submission}
-      />
+      <NewPost status="idle" submission={{ title, tags, content }} />
     );
   }
 
-  return c.redirect("/posts");
+  if (intent.startsWith("list-remove")) {
+    const idx = +intent.split("/")[1];
+    tags.splice(idx, 1);
+    return c.html(
+      <NewPost status="idle" submission={{ title, tags, content }} />
+    );
+  }
+
+  if (intent === "submit") {
+    const result = PostEditorSchema.safeParse({
+      title,
+      tags,
+      content,
+    });
+
+    if (!result.success) {
+      const submission = { title, tags, content };
+      return c.html(
+        <NewPost
+          status="error"
+          errors={result.error.flatten()}
+          submission={submission}
+        />
+      );
+    }
+
+    await prisma.post.create({
+      data: {
+        title: result.data.title,
+        //? Can't store arrays in SQLite, so just turn em into a comma-separated string
+        tags: result.data.tags?.join(","),
+        content: result.data.content,
+      },
+    });
+
+    return c.redirect("/posts");
+  }
 });
 
 posts.get("/new", (c) => {
   return c.html(<NewPost status="idle" />);
 });
-
-const PostList: FC = (props) => {
-  return (
-    <Layout>
-      <h1>Posts</h1>
-      <a href="/posts/new">+ New Post</a>
-    </Layout>
-  );
-};
-
-type NewPostProps =
-  | {
-      status: "idle";
-      submission?: z.infer<typeof PostEditorSchema>;
-    }
-  | {
-      status: "error";
-      errors: z.typeToFlattenedError<z.infer<typeof PostEditorSchema>>;
-      submission: z.infer<typeof PostEditorSchema>;
-    };
-
-const emptySubmission: z.infer<typeof PostEditorSchema> = {
-  title: "",
-  content: "",
-};
-
-const NewPost = (props: NewPostProps) => {
-  const fieldErrors =
-    props.status === "error" ? props.errors.fieldErrors : null;
-  const formErrors = props.status === "error" ? props.errors.formErrors : null;
-
-  const submission = props.submission ?? emptySubmission;
-
-  return (
-    <Layout>
-      <h1>Create New Post</h1>
-      <form method="POST" action="/posts">
-        <div>
-          <label htmlFor="title">Title</label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            value={submission.title}
-            autofocus
-          />
-          <div className="min-h-[32px] px-4 pb-3 pt-1">
-            <ErrorList errors={fieldErrors?.title} />
-          </div>
-        </div>
-        <div>
-          <label htmlFor="content">Content</label>
-          <textarea name="content" id="content">
-            {submission.content}
-          </textarea>
-          <div className="min-h-[32px] px-4 pb-3 pt-1">
-            <ErrorList errors={fieldErrors?.content} />
-          </div>
-        </div>
-        <ErrorList errors={formErrors} />
-        <button name="intent" value="submit" type="submit">
-          Submit
-        </button>
-      </form>
-    </Layout>
-  );
-};

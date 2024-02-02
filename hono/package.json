@@ -1,14 +1,23 @@
 {
   "scripts": {
-    "dev": "wrangler dev src/index.ts",
-    "deploy": "wrangler deploy --minify src/index.ts"
+    "dev": "concurrently \"npm run dev:css\" \"npm run dev:ts\"",
+    "dev:css": "npx tailwindcss -i ./src/styles/tailwind.css -o ./assets/dist/styles.css --watch",
+    "dev:ts": "tsx watch src/index.ts"
   },
   "dependencies": {
+    "@hono/node-server": "^1.7.0",
+    "@prisma/client": "5.9.1",
     "hono": "^3.12.8",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20231218.0",
-    "wrangler": "^3.22.0"
+    "concurrently": "^8.2.2",
+    "prisma": "^5.9.1",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.7.0"
+  },
+  "prisma": {
+    "schema": "./src/prisma/schema.prisma"
   }
 }

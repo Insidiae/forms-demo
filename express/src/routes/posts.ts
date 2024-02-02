@@ -13,11 +13,7 @@ const contentMaxLength = 10000;
 
 const PostEditorSchema = z.object({
   title: z.string().min(1).max(titleMaxLength),
-  tags: z
-    .array(z.string().min(1).max(tagMaxLength))
-    .optional()
-    //? Can't store arrays in SQLite, so just turn em into a comma-separated string
-    .transform((val) => (val ? val.join(",") : null)),
+  tags: z.array(z.string().min(1).max(tagMaxLength)).optional(),
   content: z.string().min(1).max(contentMaxLength),
 });
 
@@ -82,7 +78,12 @@ router
       }
 
       await prisma.post.create({
-        data: result.data,
+        data: {
+          title: result.data.title,
+          //? Can't store arrays in SQLite, so just turn em into a comma-separated string
+          tags: result.data.tags?.join(","),
+          content: result.data.content,
+        },
       });
 
       return res.redirect("/posts");

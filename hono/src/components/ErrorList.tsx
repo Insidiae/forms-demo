@@ -6,9 +6,9 @@ export function ErrorList({
   errors?: Array<string> | null;
 }) {
   return errors?.length ? (
-    <ul id={id} className="flex flex-col gap-1">
+    <ul id={id} class="flex flex-col gap-1">
       {errors.map((error, i) => (
-        <li key={i} className="text-[10px] text-foreground-destructive">
+        <li key={i} class="text-sm text-red-600">
           {error}
         </li>
       ))}
