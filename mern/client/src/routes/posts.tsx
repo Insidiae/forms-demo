@@ -4,6 +4,7 @@ type PostsData = {
   posts: { id: string; title: string; tags: string; content: string }[];
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export async function loader() {
   const data = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts`).then(
     (res) => res.json()

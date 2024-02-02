@@ -30,6 +30,7 @@ type PostFormState =
       submission: PostSubmission;
     };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
 
