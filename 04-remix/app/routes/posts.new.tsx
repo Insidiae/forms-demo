@@ -84,7 +84,7 @@ function NewPostRoute() {
         </label>
         <ul id="tags" className="flex flex-col gap-2">
           {tagsList.map((tag, idx) => (
-            <li key={idx} className="flex items-center gap-2">
+            <li key={tag.key} className="flex items-center gap-2">
               <input
                 type="text"
                 className="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"

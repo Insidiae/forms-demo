@@ -1,0 +1,80 @@
+<%_ const formErrors = status === "error" ? errors.formErrors : null -%>
+<%_ const fieldErrors = status === "error" ? errors.fieldErrors : null -%>
+<%_ const formHasErrors = Boolean(formErrors?.length); -%>
+<%_ const titleHasErrors = Boolean(fieldErrors?.title?.length); -%>
+<%_ const contentHasErrors = Boolean(fieldErrors?.content?.length); -%>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Create New Post | Forms Demo</title>
+  </head>
+  <body>
+    <div class="mx-auto flex max-w-lg flex-col gap-8 p-8">
+      <a href="/posts">
+        <h1 class="text-3xl font-bold">&larr; New Post</h1>
+      </a>
+      <form
+        action="/posts"
+        method="post"
+        class="flex flex-col gap-2"
+        <%_ if (formHasErrors) { -%>
+        aria-invalid="true"
+        aria-describedby="errors-form"
+        <%_ } -%>
+      >
+        <button
+          name="intent"
+          value="submit"
+          type="submit"
+          class="hidden"
+        ></button>
+        <label htmlFor="title" class="text-lg font-medium">Title</label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          value="<%=submission?.title %>"
+          class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          autofocus
+          <%_ if (titleHasErrors) { -%>
+          aria-invalid="true"
+          aria-describedby="errors-title"
+          <%_ } -%>
+        />
+        <div class="min-h-[32px] px-4 pb-3 pt-1">
+          <% if(fieldErrors?.title) { %> <%- include("partials/error-list", {
+          errors: fieldErrors.title, id: titleHasErrors ? "errors-title" : undefined }) %> <% } %>
+        </div>
+        <label htmlFor="content" class="text-lg font-medium">Content</label>
+        <textarea
+          name="content"
+          id="content"
+          class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          <%_ if (contentHasErrors) { -%>
+          aria-invalid="true"
+          aria-describedby="errors-content"
+          <%_ } -%>
+        >
+<%=submission?.content %></textarea
+        >
+        <div class="min-h-[32px] px-4 pb-3 pt-1">
+          <% if(fieldErrors?.content) { %> <%- include("partials/error-list", {
+          errors: fieldErrors.content, id: contentHasErrors ? "errors-content" : undefined }) %> <% } %>
+        </div>
+        <% if(formErrors) { %> <%- include("partials/error-list", { errors:
+        formErrors, id: formHasErrors ? "errors-form" : undefined }) %> <% } %>
+        <button
+          name="intent"
+          value="submit"
+          type="submit"
+          class="flex items-center justify-center gap-2 rounded-full bg-blue-600 py-2 text-center text-white disabled:bg-blue-400"
+        >
+          Submit
+        </button>
+      </form>
+    </div>
+  </body>
+</html>

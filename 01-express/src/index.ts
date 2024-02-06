@@ -1,9 +1,9 @@
 // src/index.js
-import express, { Express, Request, Response } from "express";
+import express, { type Express } from "express";
 import dotenv from "dotenv";
 import path from "path";
 
-import postsRoutes from "./routes/posts";
+import postsRoutes from "./routes/posts.starter";
 
 dotenv.config();
 

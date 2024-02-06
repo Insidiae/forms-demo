@@ -1,6 +1,8 @@
 import express from "express";
+import { PrismaClient } from "@prisma/client";
 
 import { invariant } from "../utils/misc";
+const prisma = new PrismaClient();
 
 const router = express.Router();
 
@@ -17,10 +19,18 @@ const contentMaxLength = 10000;
 
 router
   .route("/")
-  .get((req, res) => {
-    res.render("posts-list");
+  .get(async (req, res) => {
+    const posts = await prisma.post.findMany({
+      select: {
+        title: true,
+        tags: true,
+        content: true,
+      },
+    });
+
+    return res.render("posts-list", { posts });
   })
-  .post((req, res) => {
+  .post(async (req, res) => {
     const formData = req.body;
 
     const title = formData.title;
@@ -59,18 +69,22 @@ router
         (fieldErrors) => fieldErrors.length
       );
     if (hasErrors) {
-      return res.render("new-post", {
+      return res.render("new-post-v1", {
         status: "error",
         submission: { title, content },
         errors,
       });
     }
 
+    await prisma.post.create({
+      data: { title, content },
+    });
+
     return res.redirect("/posts");
   });
 
 router.route("/new").get((req, res) => {
-  res.render("new-post", {
+  res.render("new-post-v1", {
     status: "idle",
     submission: null,
     errors: null,

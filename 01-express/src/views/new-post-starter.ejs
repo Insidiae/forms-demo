@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- We'll use Tailwind CSS to generate this stylesheet -->
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Create New Post | Forms Demo</title>
+  </head>
+  <body>
+    <div class="mx-auto flex max-w-lg flex-col gap-8 p-8">
+      <a href="/posts">
+        <h1 class="text-3xl font-bold">&larr; New Post</h1>
+      </a>
+      <form action="/posts" method="post" class="flex flex-col gap-2">
+        <label htmlFor="title" class="text-lg font-medium">Title</label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          autofocus
+        />
+        <div class="min-h-[32px] px-4 pb-3 pt-1">
+          <!-- If there are errors for the title, render an error list here! -->
+        </div>
+
+        <label htmlFor="content" class="text-lg font-medium">Content</label>
+        <textarea
+          name="content"
+          id="content"
+          class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+        ></textarea>
+        <div class="min-h-[32px] px-4 pb-3 pt-1">
+          <!-- If there are errors for the content, render an error list here! -->
+        </div>
+
+        <!-- While we're at it, let's also render an error list here in case the form itself has errors -->
+
+        <button
+          name="intent"
+          value="submit"
+          type="submit"
+          class="flex items-center justify-center gap-2 rounded-full bg-blue-600 py-2 text-center text-white disabled:bg-blue-400"
+        >
+          Submit
+        </button>
+      </label>
+    </div>
+  </body>
+</html>
