@@ -1,39 +1,33 @@
-import {
-  conform,
-  useForm,
-  useFieldList,
-  list,
-  type Submission,
-} from "@conform-to/react";
-import { getFieldsetConstraint, parse } from "@conform-to/zod";
+import { ErrorList } from "../components/ErrorList";
 import {
   redirect,
   useActionData,
   Form,
   type ActionFunctionArgs,
 } from "react-router-dom";
-import { z } from "zod";
 
-import { ErrorList } from "../components/ErrorList";
-
-const titleMaxLength = 100;
-const tagMaxLength = 25;
-const contentMaxLength = 10000;
-
-const PostEditorSchema = z.object({
-  title: z.string().min(1).max(titleMaxLength),
-  tags: z.array(z.string().min(1).max(tagMaxLength)).optional(),
-  content: z.string().min(1).max(contentMaxLength),
-});
+type PostSubmission = {
+  title: string;
+  content: string;
+  tags?: string[];
+};
 
 type PostFormState =
   | {
       status: "idle";
-      submission: Submission<z.infer<typeof PostEditorSchema>>;
+      submission?: PostSubmission;
     }
   | {
       status: "error";
-      submission: Submission<z.infer<typeof PostEditorSchema>>;
+      errors: {
+        formErrors: string[];
+        fieldErrors: {
+          title: string[];
+          tags: string[];
+          content: string[];
+        };
+      };
+      submission: PostSubmission;
     };
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -55,23 +49,27 @@ export async function action({ request }: ActionFunctionArgs) {
 function NewPostRoute() {
   const formState = useActionData() as PostFormState;
 
-  const [form, fields] = useForm({
-    id: "note-editor",
-    constraint: getFieldsetConstraint(PostEditorSchema),
-    lastSubmission: formState?.submission,
-    onValidate({ formData }) {
-      return parse(formData, { schema: PostEditorSchema });
-    },
-  });
+  const formErrors =
+    formState?.status === "error" ? formState.errors.formErrors : null;
+  const fieldErrors =
+    formState?.status === "error" ? formState.errors.fieldErrors : null;
+  const tagsList = formState?.submission?.tags ? formState.submission.tags : [];
 
-  const tagsList = useFieldList(form.ref, fields.tags);
+  const formHasErrors = Boolean(formErrors?.length);
+  const titleHasErrors = Boolean(fieldErrors?.title?.length);
+  const contentHasErrors = Boolean(fieldErrors?.content?.length);
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-8 p-8">
       <a href="/posts">
         <h1 className="text-3xl font-bold">&larr; New Post</h1>
       </a>
-      <Form method="post" className="flex flex-col gap-2" {...form.props}>
+      <Form
+        method="post"
+        className="flex flex-col gap-2"
+        aria-invalid={formHasErrors || undefined}
+        aria-describedby={formHasErrors ? "errors-form" : undefined}
+      >
         <button name="intent" value="submit" type="submit" className="hidden" />
         <label htmlFor="title" className="text-lg font-medium">
           Title
@@ -79,57 +77,73 @@ function NewPostRoute() {
         <input
           type="text"
           id="title"
+          name="title"
+          defaultValue={formState?.submission?.title}
           className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
           autoFocus
-          {...conform.input(fields.title)}
+          aria-invalid={titleHasErrors || undefined}
+          aria-describedby={titleHasErrors ? "errors-title" : undefined}
         />
         <div className="min-h-[32px] px-4 pb-3 pt-1">
-          <ErrorList id={fields.title.errorId} errors={fields.title.errors} />
+          <ErrorList
+            id={titleHasErrors ? "errors-title" : undefined}
+            errors={fieldErrors?.title}
+          />
         </div>
+        {/* We'll handle accessibility for the tag input list later! */}
         <label htmlFor="tags" className="text-lg font-medium">
           Tags
         </label>
         <ul id="tags" className="flex flex-col gap-2">
           {tagsList.map((tag, idx) => (
-            <li key={tag.key} className="flex items-center gap-2">
+            <li key={idx} className="flex items-center gap-2">
               <input
                 type="text"
+                name={`tags[${idx}]`}
+                id={`tags[${idx}]`}
+                defaultValue={tag}
                 className="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"
-                {...conform.input(tag)}
               />
-              <button
-                type="submit"
-                {...list.remove(fields.tags.name, { index: idx })}
-              >
+              <button type="submit" name="intent" value={`list-remove/${idx}`}>
                 ❌
               </button>
-              <ErrorList id={tag.errorId} errors={tag.errors} />
             </li>
           ))}
         </ul>
         {tagsList.length < 5 ? (
           <button
             type="submit"
+            name="intent"
+            value="list-insert"
             className="self-start rounded-full bg-blue-600 px-4 py-2 text-xs text-center text-white disabled:bg-blue-400"
-            {...list.insert(fields.tags.name, { defaultValue: "" })}
           >
             + Add Tag
           </button>
         ) : null}
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+          <ErrorList errors={fieldErrors?.tags} />
+        </div>
         <label htmlFor="content" className="text-lg font-medium">
           Content
         </label>
         <textarea
+          name="content"
+          id="content"
           className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
-          {...conform.textarea(fields.content)}
+          defaultValue={formState?.submission?.content}
+          aria-invalid={contentHasErrors || undefined}
+          aria-describedby={contentHasErrors ? "errors-content" : undefined}
         />
         <div className="min-h-[32px] px-4 pb-3 pt-1">
           <ErrorList
-            id={fields.content.errorId}
-            errors={fields.content.errors}
+            id={contentHasErrors ? "errors-content" : undefined}
+            errors={fieldErrors?.content}
           />
         </div>
-        <ErrorList id={form.errorId} errors={form.errors} />
+        <ErrorList
+          id={formHasErrors ? "errors-form" : undefined}
+          errors={formErrors}
+        />
         <button
           name="intent"
           value="submit"

@@ -3,6 +3,7 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
+    "@conform-to/zod": "^0.9.1",
     "@hono/node-server": "^1.7.0",
     "@prisma/client": "5.9.1",
     "hono": "^3.12.8",

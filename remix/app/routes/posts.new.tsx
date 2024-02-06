@@ -73,15 +73,12 @@ function NewPostRoute() {
           type="text"
           id="title"
           className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
-          //? We'll handle accessibility later!
-          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           {...conform.input(fields.title)}
         />
         <div className="min-h-[32px] px-4 pb-3 pt-1">
           <ErrorList id={fields.title.errorId} errors={fields.title.errors} />
         </div>
-        {/* We'll handle accessibility for the tag input list later! */}
         <label htmlFor="tags" className="text-lg font-medium">
           Tags
         </label>

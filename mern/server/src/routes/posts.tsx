@@ -1,8 +1,7 @@
+import { parse } from "@conform-to/zod";
 import { Hono } from "hono";
 import { z } from "zod";
 import { PrismaClient } from "@prisma/client";
-
-import { invariant } from "../utils/misc";
 
 export const posts = new Hono();
 const prisma = new PrismaClient();
@@ -34,66 +33,28 @@ posts.post("/", async (c) => {
   const { req } = c;
   const formData = await req.formData();
 
-  const title = formData.get("title");
-  const content = formData.get("content");
-  const intent = formData.get("intent");
+  const submission = parse(formData, { schema: PostEditorSchema });
 
-  let tags: string[] = [];
-  for (let [key, value] of formData.entries()) {
-    if (key.startsWith("tags[") && key.endsWith("]")) {
-      //? Get the index number, e.g. tags[1] -> 1
-      const index = +key.slice(5, -1);
-      tags[index] = value;
-    }
+  if (submission.intent !== "submit") {
+    return c.json({ status: "idle", submission } as const);
   }
 
-  invariant(typeof intent === "string", "intent must be a string");
-  invariant(typeof title === "string", "Title must be a string");
-  invariant(typeof content === "string", "Content must be a string");
-
-  if (intent.startsWith("list-insert")) {
-    tags.push("");
-    return c.json({
-      status: "idle",
-      submission: { title, tags, content },
-    });
+  if (!submission.value) {
+    return c.json({ status: "error", submission } as const);
   }
 
-  if (intent.startsWith("list-remove")) {
-    const idx = +intent.split("/")[1];
-    tags.splice(idx, 1);
-    return c.json({
-      status: "idle",
-      submission: { title, tags, content },
-    });
-  }
+  const { title, tags, content } = submission.value;
 
-  if (intent === "submit") {
-    const result = PostEditorSchema.safeParse({
+  await prisma.post.create({
+    data: {
       title,
-      tags,
       content,
-    });
+      //? Can't store arrays in SQLite, so just turn em into a comma-separated string
+      tags: tags?.join(","),
+    },
+  });
 
-    if (!result.success) {
-      return c.json({
-        status: "error",
-        errors: result.error.flatten(),
-        submission: { title, tags, content },
-      });
-    }
-
-    await prisma.post.create({
-      data: {
-        title: result.data.title,
-        //? Can't store arrays in SQLite, so just turn em into a comma-separated string
-        tags: result.data.tags?.join(","),
-        content: result.data.content,
-      },
-    });
-
-    return c.json({ status: "success" });
-  }
+  return c.json({ status: "success" });
 });
 
 posts.get("/new", (c) => {
