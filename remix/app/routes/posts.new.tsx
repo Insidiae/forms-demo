@@ -91,12 +91,21 @@ function NewPostRoute() {
     formState?.status === "error" ? formState?.errors.fieldErrors : null;
   const tagsList = formState?.submission.tags ? formState.submission.tags : [];
 
+  const formHasErrors = Boolean(formErrors?.length);
+  const titleHasErrors = Boolean(fieldErrors?.title?.length);
+  const contentHasErrors = Boolean(fieldErrors?.content?.length);
+
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-8 p-8">
       <a href="/posts">
         <h1 className="text-3xl font-bold">&larr; New Post</h1>
       </a>
-      <Form method="post" className="flex flex-col gap-2">
+      <Form
+        method="post"
+        className="flex flex-col gap-2"
+        aria-invalid={formHasErrors || undefined}
+        aria-describedby={formHasErrors ? "errors-form" : undefined}
+      >
         <button name="intent" value="submit" type="submit" className="hidden" />
         <label htmlFor="title" className="text-lg font-medium">
           Title
@@ -110,10 +119,16 @@ function NewPostRoute() {
           //? We'll handle accessibility later!
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
+          aria-invalid={titleHasErrors || undefined}
+          aria-describedby={titleHasErrors ? "errors-title" : undefined}
         />
         <div className="min-h-[32px] px-4 pb-3 pt-1">
-          <ErrorList errors={fieldErrors?.title} />
+          <ErrorList
+            id={titleHasErrors ? "errors-title" : undefined}
+            errors={fieldErrors?.title}
+          />
         </div>
+        {/* We'll handle accessibility for the tag input list later! */}
         <label htmlFor="tags" className="text-lg font-medium">
           Tags
         </label>
@@ -154,11 +169,19 @@ function NewPostRoute() {
           id="content"
           className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
           defaultValue={formState?.submission.content}
+          aria-invalid={contentHasErrors || undefined}
+          aria-describedby={contentHasErrors ? "errors-content" : undefined}
         />
         <div className="min-h-[32px] px-4 pb-3 pt-1">
-          <ErrorList errors={fieldErrors?.content} />
+          <ErrorList
+            id={contentHasErrors ? "errors-content" : undefined}
+            errors={fieldErrors?.content}
+          />
         </div>
-        <ErrorList errors={formErrors} />
+        <ErrorList
+          id={formHasErrors ? "errors-form" : undefined}
+          errors={formErrors}
+        />
         <button
           name="intent"
           value="submit"

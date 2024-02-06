@@ -20,6 +20,10 @@ export const NewPost = (props: NewPostProps) => {
     props.status === "error" ? props.errors.fieldErrors : null;
   const tagsList = props.submission?.tags ? props.submission.tags : [];
 
+  const formHasErrors = Boolean(formErrors?.length);
+  const titleHasErrors = Boolean(fieldErrors?.title?.length);
+  const contentHasErrors = Boolean(fieldErrors?.content?.length);
+
   return (
     <html lang="en">
       <head>
@@ -33,7 +37,13 @@ export const NewPost = (props: NewPostProps) => {
           <a href="/posts">
             <h1 class="text-3xl font-bold">&larr; New Post</h1>
           </a>
-          <form action="/posts" method="post" class="flex flex-col gap-2">
+          <form
+            action="/posts"
+            method="post"
+            class="flex flex-col gap-2"
+            aria-invalid={formHasErrors || undefined}
+            aria-describedby={formHasErrors ? "errors-form" : undefined}
+          >
             <button name="intent" value="submit" type="submit" class="hidden" />
             <label htmlFor="title" class="text-lg font-medium">
               Title
@@ -45,10 +55,16 @@ export const NewPost = (props: NewPostProps) => {
               value={props.submission?.title}
               class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
               autofocus
+              aria-invalid={titleHasErrors || undefined}
+              aria-describedby={titleHasErrors ? "errors-title" : undefined}
             />
             <div class="min-h-[32px] px-4 pb-3 pt-1">
-              <ErrorList errors={fieldErrors?.title} />
+              <ErrorList
+                id={titleHasErrors ? "errors-title" : undefined}
+                errors={fieldErrors?.title}
+              />
             </div>
+            {/* We'll handle accessibility for the tag input list later! */}
             <label for="tags" class="text-lg font-medium">
               Tags
             </label>
@@ -92,13 +108,21 @@ export const NewPost = (props: NewPostProps) => {
               name="content"
               id="content"
               class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+              aria-invalid={contentHasErrors || undefined}
+              aria-describedby={contentHasErrors ? "errors-content" : undefined}
             >
               {props.submission?.content}
             </textarea>
             <div class="min-h-[32px] px-4 pb-3 pt-1">
-              <ErrorList errors={fieldErrors?.content} />
+              <ErrorList
+                id={contentHasErrors ? "errors-content" : undefined}
+                errors={fieldErrors?.content}
+              />
             </div>
-            <ErrorList errors={formErrors} />
+            <ErrorList
+              id={formHasErrors ? "errors-form" : undefined}
+              errors={formErrors}
+            />
             <button
               name="intent"
               value="submit"
