@@ -1,3 +1,5 @@
+import { conform, useForm, useFieldList, list } from "@conform-to/react";
+import { getFieldsetConstraint, parse } from "@conform-to/zod";
 import { json, redirect, type ActionFunctionArgs } from "@remix-run/node";
 import { useActionData, Form } from "@remix-run/react";
 import { z } from "zod";
@@ -5,7 +7,6 @@ import { z } from "zod";
 import { prisma } from "~/utils/db.server";
 
 import { ErrorList } from "~/components/ErrorList";
-import { invariant } from "~/utils/misc";
 
 const titleMaxLength = 100;
 const tagMaxLength = 25;
@@ -20,92 +21,50 @@ export const PostEditorSchema = z.object({
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
 
-  const title = formData.get("title");
-  const content = formData.get("content");
-  const intent = formData.get("intent");
+  const submission = parse(formData, { schema: PostEditorSchema });
 
-  const tags: string[] = [];
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("tags[") && key.endsWith("]")) {
-      //? Get the index number, e.g. tags[1] -> 1
-      const index = +key.slice(5, -1);
-      tags[index] = value as string;
-    }
+  if (submission.intent !== "submit") {
+    return json({ status: "idle", submission } as const);
   }
 
-  invariant(typeof intent === "string", "intent must be a string");
-  invariant(typeof title === "string", "Title must be a string");
-  invariant(typeof content === "string", "Content must be a string");
-
-  if (intent.startsWith("list-insert")) {
-    tags.push("");
-    return json({
-      status: "idle",
-      submission: { title, tags, content },
-    } as const);
+  if (!submission.value) {
+    return json({ status: "error", submission } as const);
   }
 
-  if (intent.startsWith("list-remove")) {
-    const idx = +intent.split("/")[1];
-    tags.splice(idx, 1);
-    return json({
-      status: "idle",
-      submission: { title, tags, content },
-    } as const);
-  }
+  const { title, tags, content } = submission.value;
 
-  if (intent === "submit") {
-    const result = PostEditorSchema.safeParse({
+  await prisma.post.create({
+    data: {
       title,
-      tags,
       content,
-    });
+      //? Can't store arrays in SQLite, so just turn em into a comma-separated string
+      tags: tags?.join(","),
+    },
+  });
 
-    if (!result.success) {
-      return json({
-        status: "error",
-        errors: result.error.flatten(),
-        submission: { title, tags, content },
-      } as const);
-    }
-
-    await prisma.post.create({
-      data: {
-        title: result.data.title,
-        //? Can't store arrays in SQLite, so just turn em into a comma-separated string
-        tags: result.data.tags?.join(","),
-        content: result.data.content,
-      },
-    });
-
-    return redirect("/posts");
-  }
+  return redirect("/posts");
 }
 
 function NewPostRoute() {
   const formState = useActionData<typeof action>();
 
-  const formErrors =
-    formState?.status === "error" ? formState?.errors.formErrors : null;
-  const fieldErrors =
-    formState?.status === "error" ? formState?.errors.fieldErrors : null;
-  const tagsList = formState?.submission.tags ? formState.submission.tags : [];
+  const [form, fields] = useForm({
+    id: "note-editor",
+    constraint: getFieldsetConstraint(PostEditorSchema),
+    lastSubmission: formState?.submission,
+    onValidate({ formData }) {
+      return parse(formData, { schema: PostEditorSchema });
+    },
+  });
 
-  const formHasErrors = Boolean(formErrors?.length);
-  const titleHasErrors = Boolean(fieldErrors?.title?.length);
-  const contentHasErrors = Boolean(fieldErrors?.content?.length);
+  const tagsList = useFieldList(form.ref, fields.tags);
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-8 p-8">
       <a href="/posts">
         <h1 className="text-3xl font-bold">&larr; New Post</h1>
       </a>
-      <Form
-        method="post"
-        className="flex flex-col gap-2"
-        aria-invalid={formHasErrors || undefined}
-        aria-describedby={formHasErrors ? "errors-form" : undefined}
-      >
+      <Form method="post" className="flex flex-col gap-2" {...form.props}>
         <button name="intent" value="submit" type="submit" className="hidden" />
         <label htmlFor="title" className="text-lg font-medium">
           Title
@@ -113,20 +72,14 @@ function NewPostRoute() {
         <input
           type="text"
           id="title"
-          name="title"
-          defaultValue={formState?.submission.title}
           className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
           //? We'll handle accessibility later!
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
-          aria-invalid={titleHasErrors || undefined}
-          aria-describedby={titleHasErrors ? "errors-title" : undefined}
+          {...conform.input(fields.title)}
         />
         <div className="min-h-[32px] px-4 pb-3 pt-1">
-          <ErrorList
-            id={titleHasErrors ? "errors-title" : undefined}
-            errors={fieldErrors?.title}
-          />
+          <ErrorList id={fields.title.errorId} errors={fields.title.errors} />
         </div>
         {/* We'll handle accessibility for the tag input list later! */}
         <label htmlFor="tags" className="text-lg font-medium">
@@ -137,51 +90,42 @@ function NewPostRoute() {
             <li key={idx} className="flex items-center gap-2">
               <input
                 type="text"
-                name={`tags[${idx}]`}
-                id={`tags[${idx}]`}
-                defaultValue={tag}
                 className="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"
+                {...conform.input(tag)}
               />
-              <button type="submit" name="intent" value={`list-remove/${idx}`}>
+              <button
+                type="submit"
+                {...list.remove(fields.tags.name, { index: idx })}
+              >
                 ❌
               </button>
+              <ErrorList id={tag.errorId} errors={tag.errors} />
             </li>
           ))}
         </ul>
         {tagsList.length < 5 ? (
           <button
             type="submit"
-            name="intent"
-            value="list-insert"
             className="self-start rounded-full bg-blue-600 px-4 py-2 text-xs text-center text-white disabled:bg-blue-400"
+            {...list.insert(fields.tags.name, { defaultValue: "" })}
           >
             + Add Tag
           </button>
         ) : null}
-        <div className="min-h-[32px] px-4 pb-3 pt-1">
-          <ErrorList errors={fieldErrors?.tags} />
-        </div>
         <label htmlFor="content" className="text-lg font-medium">
           Content
         </label>
         <textarea
-          name="content"
-          id="content"
           className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
-          defaultValue={formState?.submission.content}
-          aria-invalid={contentHasErrors || undefined}
-          aria-describedby={contentHasErrors ? "errors-content" : undefined}
+          {...conform.textarea(fields.content)}
         />
         <div className="min-h-[32px] px-4 pb-3 pt-1">
           <ErrorList
-            id={contentHasErrors ? "errors-content" : undefined}
-            errors={fieldErrors?.content}
+            id={fields.content.errorId}
+            errors={fields.content.errors}
           />
         </div>
-        <ErrorList
-          id={formHasErrors ? "errors-form" : undefined}
-          errors={formErrors}
-        />
+        <ErrorList id={form.errorId} errors={form.errors} />
         <button
           name="intent"
           value="submit"
