@@ -3,7 +3,7 @@ import express, { type Express } from "express";
 import dotenv from "dotenv";
 import path from "path";
 
-import postsRoutes from "./routes/posts.starter";
+import postsRoutes from "./routes/posts";
 
 dotenv.config();
 
@@ -11,7 +11,7 @@ const app: Express = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, "dist")));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 

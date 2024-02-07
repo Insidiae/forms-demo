@@ -1,14 +1,9 @@
-<%_ const formErrors = status === "error" ? errors.formErrors : null -%>
-<%_ const fieldErrors = status === "error" ? errors.fieldErrors : null -%>
-<%_ const tagsList = submission?.tags ?? [] -%>
-<%_ const formHasErrors = Boolean(formErrors?.length); -%>
-<%_ const titleHasErrors = Boolean(fieldErrors?.title?.length); -%>
-<%_ const contentHasErrors = Boolean(fieldErrors?.content?.length); -%>
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- We'll use Tailwind CSS to generate this stylesheet -->
     <link rel="stylesheet" href="/styles.css" />
     <title>Create New Post | Forms Demo</title>
   </head>
@@ -17,88 +12,31 @@
       <a href="/posts">
         <h1 class="text-3xl font-bold">&larr; New Post</h1>
       </a>
-      <form
-        action="/posts"
-        method="post"
-        class="flex flex-col gap-2"
-        <%_ if (formHasErrors) { -%>
-        aria-invalid="true"
-        aria-describedby="errors-form"
-        <%_ } -%>
-      >
-        <button
-          name="intent"
-          value="submit"
-          type="submit"
-          class="hidden"
-        ></button>
+      <form action="/posts" method="post" class="flex flex-col gap-2">
         <label htmlFor="title" class="text-lg font-medium">Title</label>
         <input
           type="text"
           id="title"
           name="title"
-          value="<%=submission?.title %>"
           class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
           autofocus
-          <%_ if (titleHasErrors) { -%>
-          aria-invalid="true"
-          aria-describedby="errors-title"
-          <%_ } -%>
         />
         <div class="min-h-[32px] px-4 pb-3 pt-1">
-          <% if(fieldErrors?.title) { %> <%- include("partials/error-list", {
-          errors: fieldErrors.title, id: titleHasErrors ? "errors-title" : undefined }) %> <% } %>
+          <!-- If there are errors for the title, render an error list here! -->
         </div>
-        <!-- We'll handle accessibility for the tag input list later! -->
-        <label for="tags" class="text-lg font-medium">Tags</label>
-        <ul id="tags" class="flex flex-col gap-2">
-          <%_tagsList.forEach((tag, idx) => { %>
-          <li class="flex items-center gap-2">
-            <input
-              type="text"
-              name="tags[<%=idx %>]"
-              id="tags[<%=idx %>]"
-              value="<%=tag %>"
-              class="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"
-            />
-            <button type="submit" name="intent" value="list-remove/<%=idx %>">
-              ❌
-            </button>
-          </li>
-          <%_ })%>
-        </ul>
-        <%_if (tagsList.length < 5) { %>
-        <button
-          type="submit"
-          name="intent"
-          value="list-insert"
-          class="self-start rounded-full bg-blue-600 px-4 py-2 text-xs text-center text-white disabled:bg-blue-400"
-        >
-          + Add Tag
-        </button>
-        <%_ } %>
-        <div class="min-h-[32px] px-4 pb-3 pt-1">
-          <% if(fieldErrors?.tags) { %> <%- include("partials/error-list", {
-          errors: fieldErrors.tags, id: "errors-tags" }) %> <% } %>
-        </div>
+
         <label htmlFor="content" class="text-lg font-medium">Content</label>
         <textarea
           name="content"
           id="content"
           class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
-          <%_ if (contentHasErrors) { -%>
-          aria-invalid="true"
-          aria-describedby="errors-content"
-          <%_ } -%>
-        >
-<%=submission?.content %></textarea
-        >
+        ></textarea>
         <div class="min-h-[32px] px-4 pb-3 pt-1">
-          <% if(fieldErrors?.content) { %> <%- include("partials/error-list", {
-          errors: fieldErrors.content, id: contentHasErrors ? "errors-content" : undefined }) %> <% } %>
+          <!-- If there are errors for the content, render an error list here! -->
         </div>
-        <% if(formErrors) { %> <%- include("partials/error-list", { errors:
-        formErrors, id: formHasErrors ? "errors-form" : undefined }) %> <% } %>
+
+        <!-- While we're at it, let's also render an error list here in case the form itself has errors -->
+
         <button
           name="intent"
           value="submit"
@@ -107,7 +45,7 @@
         >
           Submit
         </button>
-      </form>
+      </label>
     </div>
   </body>
 </html>

@@ -1,5 +1,8 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
+
+import { invariant } from "../utils/misc";
+
 const prisma = new PrismaClient();
 
 const router = express.Router();
@@ -22,6 +25,9 @@ router
 
     const title = formData.title;
     const content = formData.content;
+
+    invariant(typeof title === "string", "Title must be a string");
+    invariant(typeof content === "string", "Content must be a string");
 
     await prisma.post.create({
       data: { title, content },
