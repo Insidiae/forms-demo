@@ -1,24 +1,19 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { useLoaderData, Link } from "react-router-dom";
 
-type PostData = { id: string; title: string; tags: string; content: string };
+type PostsData = {
+  posts: { id: string; title: string; tags: string; content: string }[];
+};
+
+// eslint-disable-next-line react-refresh/only-export-components
+export async function loader() {
+  const data = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts`).then(
+    (res) => res.json()
+  );
+  return data;
+}
 
 function PostsRoute() {
-  const [posts, setPosts] = React.useState<PostData[]>([]);
-
-  React.useEffect(() => {
-    const abortController = new AbortController();
-
-    fetch(`${import.meta.env.VITE_BACKEND_URL}/posts`, {
-      signal: abortController.signal,
-    })
-      .then((res) => res.json())
-      .then((data) => setPosts(data.posts));
-
-    return () => {
-      abortController.abort();
-    };
-  }, []);
+  const data = useLoaderData() as PostsData;
 
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-8 p-8">
@@ -30,8 +25,8 @@ function PostsRoute() {
         + New Post
       </Link>
       <div className="flex flex-col gap-4">
-        {posts
-          ? posts.map(({ id, title, tags, content }) => (
+        {data?.posts
+          ? data.posts.map(({ id, title, tags, content }) => (
               <article
                 key={id}
                 className="flex flex-col gap-2 rounded-md border border-black p-4"

@@ -89,7 +89,14 @@ function NewPostRoute() {
     formState?.status === "error" ? formState?.errors.formErrors : null;
   const fieldErrors =
     formState?.status === "error" ? formState?.errors.fieldErrors : null;
-  const tagsList = formState?.submission.tags ? formState.submission.tags : [];
+  const tagsList = formState?.submission?.tags
+    ? formState.submission.tags.map((tag) => ({
+        //? We need a unique key to tell React how to
+        //? properly track changes in the list
+        key: crypto.randomUUID(),
+        value: tag,
+      }))
+    : [];
 
   const formHasErrors = Boolean(formErrors?.length);
   const titleHasErrors = Boolean(fieldErrors?.title?.length);
@@ -133,13 +140,13 @@ function NewPostRoute() {
           Tags
         </label>
         <ul id="tags" className="flex flex-col gap-2">
-          {tagsList.map((tag, idx) => (
-            <li key={idx} className="flex items-center gap-2">
+          {tagsList.map(({ key, value }, idx) => (
+            <li key={key} className="flex items-center gap-2">
               <input
                 type="text"
                 name={`tags[${idx}]`}
                 id={`tags[${idx}]`}
-                defaultValue={tag}
+                defaultValue={value}
                 className="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"
               />
               <button type="submit" name="intent" value={`list-remove/${idx}`}>

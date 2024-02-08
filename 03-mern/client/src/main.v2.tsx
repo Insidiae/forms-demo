@@ -6,8 +6,8 @@ import {
   redirect,
 } from "react-router-dom";
 
-import PostsRoute from "./routes/posts.tsx";
-import NewPostRoute from "./routes/posts.new.tsx";
+import PostsRoute, { loader as postsLoader } from "./routes/posts.tsx";
+import NewPostRoute, { action as newPostAction } from "./routes/posts.new.tsx";
 
 import "./index.css";
 
@@ -20,10 +20,12 @@ const router = createBrowserRouter([
   },
   {
     path: "/posts",
+    loader: postsLoader,
     element: <PostsRoute />,
   },
   {
     path: "/posts/new",
+    action: newPostAction,
     element: <NewPostRoute />,
   },
 ]);

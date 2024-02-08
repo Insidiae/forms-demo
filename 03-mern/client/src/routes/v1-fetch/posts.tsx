@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-type PostData = { title: string; tags: string; content: string };
+type PostData = { id: string; title: string; tags: string; content: string };
 
 function PostsRoute() {
   const [posts, setPosts] = React.useState<PostData[]>([]);
@@ -31,13 +31,19 @@ function PostsRoute() {
       </Link>
       <div className="flex flex-col gap-4">
         {posts
-          ? posts.map(({ title, tags, content }) => (
-              <article className="flex flex-col gap-2 rounded-md border border-black p-4">
+          ? posts.map(({ id, title, tags, content }) => (
+              <article
+                key={id}
+                className="flex flex-col gap-2 rounded-md border border-black p-4"
+              >
                 <h2 className="text-xl font-bold">{title}</h2>
                 {tags ? (
                   <ul className="flex flex-wrap gap-2 mb-2">
-                    {tags.split(",").map((tag) => (
-                      <li className="bg-blue-600 px-2 py-1 text-white rounded-full text-xs">
+                    {tags.split(",").map((tag, idx) => (
+                      <li
+                        key={idx}
+                        className="bg-blue-600 px-2 py-1 text-white rounded-full text-xs"
+                      >
                         {tag}
                       </li>
                     ))}

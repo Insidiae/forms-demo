@@ -27,18 +27,33 @@ type PostFormState =
     };
 
 function NewPostRoute() {
-  const [state, setState] = React.useState<PostFormState>({ status: "idle" });
+  const [formState, setFormState] = React.useState<PostFormState>({
+    status: "idle",
+  });
   const navigate = useNavigate();
 
-  const formErrors = state.status === "error" ? state.errors.formErrors : null;
+  const formErrors =
+    formState.status === "error" ? formState.errors.formErrors : null;
   const fieldErrors =
-    state.status === "error" ? state.errors.fieldErrors : null;
-  const tagsList = state.submission?.tags ? state.submission.tags : [];
+    formState.status === "error" ? formState.errors.fieldErrors : null;
+  const tagsList = formState.submission?.tags
+    ? formState.submission.tags.map((tag) => ({
+        //? We need a unique key to tell React how to
+        //? properly track changes in the list
+        key: crypto.randomUUID(),
+        value: tag,
+      }))
+    : [];
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const formHasErrors = Boolean(formErrors?.length);
+  const titleHasErrors = Boolean(fieldErrors?.title?.length);
+  const contentHasErrors = Boolean(fieldErrors?.content?.length);
+
+  async function handleSubmit(
+    event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>
+  ) {
     event.preventDefault();
     const form = event.currentTarget;
-    // @ts-expect-error TODO: figure out submitter typing
     const submitter = event.nativeEvent.submitter;
     const formData = new FormData(form, submitter);
 
@@ -48,11 +63,10 @@ function NewPostRoute() {
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log(data.status);
         if (data.status === "success") {
           navigate("/posts");
         } else {
-          setState(data);
+          setFormState(data);
         }
       });
   }
@@ -63,10 +77,11 @@ function NewPostRoute() {
         <h1 className="text-3xl font-bold">&larr; New Post</h1>
       </a>
       <form
-        action="/posts"
         method="post"
         className="flex flex-col gap-2"
         onSubmit={handleSubmit}
+        aria-invalid={formHasErrors || undefined}
+        aria-describedby={formHasErrors ? "errors-form" : undefined}
       >
         <button name="intent" value="submit" type="submit" className="hidden" />
         <label htmlFor="title" className="text-lg font-medium">
@@ -76,24 +91,30 @@ function NewPostRoute() {
           type="text"
           id="title"
           name="title"
-          defaultValue={state.submission?.title}
+          defaultValue={formState?.submission?.title}
           className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
           autoFocus
+          aria-invalid={titleHasErrors || undefined}
+          aria-describedby={titleHasErrors ? "errors-title" : undefined}
         />
         <div className="min-h-[32px] px-4 pb-3 pt-1">
-          <ErrorList errors={fieldErrors?.title} />
+          <ErrorList
+            id={titleHasErrors ? "errors-title" : undefined}
+            errors={fieldErrors?.title}
+          />
         </div>
+        {/* We'll handle accessibility for the tag input list later! */}
         <label htmlFor="tags" className="text-lg font-medium">
           Tags
         </label>
         <ul id="tags" className="flex flex-col gap-2">
-          {tagsList.map((tag, idx) => (
-            <li className="flex items-center gap-2">
+          {tagsList.map(({ key, value }, idx) => (
+            <li key={key} className="flex items-center gap-2">
               <input
                 type="text"
                 name={`tags[${idx}]`}
                 id={`tags[${idx}]`}
-                defaultValue={tag}
+                defaultValue={value}
                 className="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"
               />
               <button type="submit" name="intent" value={`list-remove/${idx}`}>
@@ -122,13 +143,20 @@ function NewPostRoute() {
           name="content"
           id="content"
           className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
-        >
-          {state.submission?.content}
-        </textarea>
+          defaultValue={formState?.submission?.content}
+          aria-invalid={contentHasErrors || undefined}
+          aria-describedby={contentHasErrors ? "errors-content" : undefined}
+        />
         <div className="min-h-[32px] px-4 pb-3 pt-1">
-          <ErrorList errors={fieldErrors?.content} />
+          <ErrorList
+            id={contentHasErrors ? "errors-content" : undefined}
+            errors={fieldErrors?.content}
+          />
         </div>
-        <ErrorList errors={formErrors} />
+        <ErrorList
+          id={formHasErrors ? "errors-form" : undefined}
+          errors={formErrors}
+        />
         <button
           name="intent"
           value="submit"

@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { PrismaClient } from "@prisma/client";
 
+import { NewPost } from "../components/views/NewPost";
+import { PostList } from "../components/views/PostList";
 import { invariant } from "../utils/misc";
 
 export const posts = new Hono();
@@ -20,14 +22,13 @@ export const PostEditorSchema = z.object({
 posts.get("/", async (c) => {
   const posts = await prisma.post.findMany({
     select: {
-      id: true,
       title: true,
       tags: true,
       content: true,
     },
   });
 
-  return c.json({ posts });
+  return c.html(<PostList posts={posts} />);
 });
 
 posts.post("/", async (c) => {
@@ -53,19 +54,17 @@ posts.post("/", async (c) => {
 
   if (intent.startsWith("list-insert")) {
     tags.push("");
-    return c.json({
-      status: "idle",
-      submission: { title, tags, content },
-    });
+    return c.html(
+      <NewPost status="idle" submission={{ title, tags, content }} />
+    );
   }
 
   if (intent.startsWith("list-remove")) {
     const idx = +intent.split("/")[1];
     tags.splice(idx, 1);
-    return c.json({
-      status: "idle",
-      submission: { title, tags, content },
-    });
+    return c.html(
+      <NewPost status="idle" submission={{ title, tags, content }} />
+    );
   }
 
   if (intent === "submit") {
@@ -76,11 +75,14 @@ posts.post("/", async (c) => {
     });
 
     if (!result.success) {
-      return c.json({
-        status: "error",
-        errors: result.error.flatten(),
-        submission: { title, tags, content },
-      });
+      const submission = { title, tags, content };
+      return c.html(
+        <NewPost
+          status="error"
+          errors={result.error.flatten()}
+          submission={submission}
+        />
+      );
     }
 
     await prisma.post.create({
@@ -92,12 +94,10 @@ posts.post("/", async (c) => {
       },
     });
 
-    return c.json({ status: "success" });
+    return c.redirect("/posts");
   }
 });
 
 posts.get("/new", (c) => {
-  return c.json({
-    status: "idle",
-  });
+  return c.html(<NewPost status="idle" />);
 });

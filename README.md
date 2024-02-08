@@ -254,7 +254,81 @@ router
 
 </details>
 
-<!-- TODO: Add back snippet for new-post.ejs -->
+<details>
+	<summary>src/views/new-post.ejs</summary>
+  
+```diff
++ <%_ const formErrors = status === "error" ? errors.formErrors : null -%>
++ <%_ const fieldErrors = status === "error" ? errors.fieldErrors : null -%>
++ <%_ const formHasErrors = Boolean(formErrors?.length); -%>
++ <%_ const titleHasErrors = Boolean(fieldErrors?.title?.length); -%>
++ <%_ const contentHasErrors = Boolean(fieldErrors?.content?.length); -%>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- We'll use Tailwind CSS to generate this stylesheet -->
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Create New Post | Forms Demo</title>
+  </head>
+  <body>
+    <div class="mx-auto flex max-w-lg flex-col gap-8 p-8">
+      <a href="/posts">
+        <h1 class="text-3xl font-bold">&larr; New Post</h1>
+      </a>
+      <form action="/posts" method="post" class="flex flex-col gap-2">
+        <label htmlFor="title" class="text-lg font-medium">Title</label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          autofocus
+        />
+        <div class="min-h-[32px] px-4 pb-3 pt-1">
+-          <!-- If there are errors for the title, render an error list here! -->
++          <% if(fieldErrors?.title) { %>
++            <%- include("partials/error-list", { errors: fieldErrors.title, id: titleHasErrors ? "errors-title" : undefined }) %>
++          <% } %>
+        </div>
+
+        <label htmlFor="content" class="text-lg font-medium">Content</label>
+        <textarea
+          name="content"
+          id="content"
+          class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+        ></textarea>
+        <div class="min-h-[32px] px-4 pb-3 pt-1">
+
+-          <!-- If there are errors for the content, render an error list here! -->
++          <% if(fieldErrors?.content) { %>
++            <%- include("partials/error-list", { errors: fieldErrors.content, id: contentHasErrors ? "errors-content" : undefined }) %>
++          <% } %>
+        </div>
+
+-        <!-- While we're at it, let's also render an error list here in case the form itself has errors -->
++        <% if(formErrors) { %>
++          <%- include("partials/error-list", { errors: formErrors, id: formHasErrors ? "errors-form" : undefined }) %>
++        <% } %>
+
+        <button
+          name="intent"
+          value="submit"
+          type="submit"
+          class="flex items-center justify-center gap-2 rounded-full bg-blue-600 py-2 text-center text-white disabled:bg-blue-400"
+        >
+          Submit
+        </button>
+      </label>
+    </div>
+
+  </body>
+</html>
+
+````
+
+</details>
 
 It would also be helpful to the user if we can show their previous inputs back when we refresh the form after an invalid submission. To do this, we simply need to include a `submission` object to our `res.render()` containing whatever input they've previously submitted:
 
@@ -271,7 +345,7 @@ if (hasErrors) {
 ```
 
 ```diff
-// src/views/new-post.ts
+// src/views/new-post.ejs
 <input
   type="text"
   id="title"
@@ -283,7 +357,7 @@ if (hasErrors) {
 ```
 
 ```diff
-// src/views/new-post.ts
+// src/views/new-post.ejs
 <textarea
   name="content"
   id="content"
@@ -292,7 +366,7 @@ if (hasErrors) {
 +><%=submission?.content %></textarea>
 ```
 
-### Simplifying Validation Logic
+### Simplifying validation logic
 
 Looking at our `router.post()` handler, it's clear that we're duplicating a bunch of logic across the different inputs we're checking. Unfortunately, this only gets worse as requirements become stricter and our contraints become more complex.
 
@@ -379,7 +453,7 @@ router
 
 Even with our simple example, that's still a lot of duplicated code we just removed! This will become even more useful once we add a more complex input example later.
 
-### Making the Error Displays Accessible
+### Making the error displays accessible
 
 We can use ARIA attributes to make our error messages more descriptive to users that use accessibility tools such as screen readers:
 
@@ -387,30 +461,30 @@ We can use ARIA attributes to make our error messages more descriptive to users 
 	<summary>src/views/new-post.ejs</summary>
 
 ```diff
-        <input
-          type="text"
-          id="title"
-          name="title"
-          value="<%=submission?.title %>"
-          class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
-          autofocus
-+          <%_ if (titleHasErrors) { -%>
-+          aria-invalid="true"
-+          aria-describedby="errors-title"
-+          <%_ } -%>
-        />
+<input
+  type="text"
+  id="title"
+  name="title"
+  value="<%=submission?.title %>"
+  class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+  autofocus
++  <%_ if (titleHasErrors) { -%>
++  aria-invalid="true"
++  aria-describedby="errors-title"
++  <%_ } -%>
+/>
 ```
 
 ```diff
-        <textarea
-          name="content"
-          id="content"
-          class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
-+          <%_ if (contentHasErrors) { -%>
-+          aria-invalid="true"
-+          aria-describedby="errors-content"
-+          <%_ } -%>
-        >
+<textarea
+  name="content"
+  id="content"
+  class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
++  <%_ if (contentHasErrors) { -%>
++  aria-invalid="true"
++  aria-describedby="errors-content"
++  <%_ } -%>
+>
 ```
 
 </details>
@@ -479,7 +553,7 @@ Then, add this between the `title` and `content` inputs:
 </div>
 ```
 
-### Using Submission Intents
+### Using submission intents
 
 With the addition of the `tags` input list, our `router.post()` handler will get a bit more complicated. In addition to handling our usual form submissions, we'll also want to handle two more cases where the user adds or removes an item from the `tags` list.
 
@@ -509,6 +583,8 @@ To fix this, we simply need to add a hidden submit button at the very top of our
 ```html
 <button name="intent" value="submit" type="submit" class="hidden"></button>
 ```
+
+### Handling the list of inputs
 
 Now, let's actually handle the different submission intents in our `router.post()` handler:
 
@@ -680,22 +756,1251 @@ for (let [key, value] of Object.entries(formData)) {
 
 ## A New Standard: Web Fetch API
 
-TODO: Hono example
+The [Web Fetch API](https://fetch.spec.whatwg.org) is a new standard that aims to unify fetching across the web platform and provide a unified architecture for fetching resources on the web so they are all consistent when it comes to various aspects of fetching.
 
-## What about ReactJS?
+If you've used JavaScript to build web apps, you've probably used `fetch()`:
 
-TODO: MERN v1 example
+```js
+async function logMovies() {
+  const response = await fetch("http://example.com/movies.json");
+  const movies = await response.json();
+  console.log(movies);
+}
+```
+
+The Web Fetch API extends this process to make fetching data more consistent between the server and the client. The Web Fetch API gives us [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) and [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects containing the information we need to ...
+
+In practice, using the Web Fetch API in our form example is relatively simple. Since we're already using native form submissions, we're already supplying the `Request` part whenever the user submits the form. All we need to do is handle that `Request` in our route handlers using the Web Fetch API.
+
+This is what the `express.urlencoded()` middleware already does for us, except the parsed form data is converted into an object and put into Express' `req.body`. Let's look at another example using a different framework that allows us to play with the Web Fetch API ourselves. Moving into the `02-hono` example, we have the same app built using [Hono](https://hono.dev/):
+
+<details>
+	<summary>src/routes/posts.tsx</summary>
+
+```tsx
+import { Hono } from "hono";
+import { z } from "zod";
+import { PrismaClient } from "@prisma/client";
+
+import { NewPost } from "../components/views/NewPost";
+import { PostList } from "../components/views/PostList";
+import { invariant } from "../utils/misc";
+
+export const posts = new Hono();
+const prisma = new PrismaClient();
+
+const titleMaxLength = 100;
+const tagMaxLength = 25;
+const contentMaxLength = 10000;
+
+export const PostEditorSchema = z.object({
+  title: z.string().min(1).max(titleMaxLength),
+  tags: z.array(z.string().min(1).max(tagMaxLength)).optional(),
+  content: z.string().min(1).max(contentMaxLength),
+});
+
+posts.get("/", async (c) => {
+  const posts = await prisma.post.findMany({
+    select: {
+      title: true,
+      tags: true,
+      content: true,
+    },
+  });
+
+  return c.html(<PostList posts={posts} />);
+});
+
+posts.post("/", async (c) => {
+  const { req } = c;
+  const formData = await req.formData();
+
+  const title = formData.get("title");
+  const content = formData.get("content");
+  const intent = formData.get("intent");
+
+  let tags: string[] = [];
+  for (let [key, value] of formData.entries()) {
+    if (key.startsWith("tags[") && key.endsWith("]")) {
+      //? Get the index number, e.g. tags[1] -> 1
+      const index = +key.slice(5, -1);
+      tags[index] = value;
+    }
+  }
+
+  invariant(typeof intent === "string", "intent must be a string");
+  invariant(typeof title === "string", "Title must be a string");
+  invariant(typeof content === "string", "Content must be a string");
+
+  if (intent.startsWith("list-insert")) {
+    tags.push("");
+    return c.html(
+      <NewPost status="idle" submission={{ title, tags, content }} />
+    );
+  }
+
+  if (intent.startsWith("list-remove")) {
+    const idx = +intent.split("/")[1];
+    tags.splice(idx, 1);
+    return c.html(
+      <NewPost status="idle" submission={{ title, tags, content }} />
+    );
+  }
+
+  if (intent === "submit") {
+    const result = PostEditorSchema.safeParse({
+      title,
+      tags,
+      content,
+    });
+
+    if (!result.success) {
+      const submission = { title, tags, content };
+      return c.html(
+        <NewPost
+          status="error"
+          errors={result.error.flatten()}
+          submission={submission}
+        />
+      );
+    }
+
+    await prisma.post.create({
+      data: {
+        title: result.data.title,
+        //? Can't store arrays in SQLite, so just turn em into a comma-separated string
+        tags: result.data.tags?.join(","),
+        content: result.data.content,
+      },
+    });
+
+    return c.redirect("/posts");
+  }
+});
+
+posts.get("/new", (c) => {
+  return c.html(<NewPost status="idle" />);
+});
+```
+
+</details>
+
+Pretty much the only difference between the Express and Hono examples comes down to how we get the form submission data, and even then they still look really similar:
+
+```ts
+// Express
+const formData = req.body;
+
+const title = formData.title;
+const content = formData.content;
+const intent = formData.intent;
+
+let tags: string[] = [];
+for (let [key, value] of Object.entries(formData)) {
+  if (key.startsWith("tags[") && key.endsWith("]")) {
+    //? Get the index number, e.g. tags[1] -> 1
+    const index = +key.slice(5, -1);
+    // You can also typecheck this with the `invariant()` utility:
+    tags[index] = value as string;
+  }
+}
+```
+
+```ts
+// Hono
+const formData = await req.formData();
+
+const title = formData.get("title");
+const content = formData.get("content");
+const intent = formData.get("intent");
+
+let tags: string[] = [];
+for (let [key, value] of formData.entries()) {
+  if (key.startsWith("tags[") && key.endsWith("]")) {
+    //? Get the index number, e.g. tags[1] -> 1
+    const index = +key.slice(5, -1);
+    tags[index] = value;
+  }
+}
+```
+
+Instead of getting the data from Express' `req.body` (which itself needs a middleware to parse data into), in Hono we can use the `formData()` method provided in the `Request` object. This method gives us a `FormData` object which we can use its built-in methods to get the form submission data that we need.
+
+## What about React?
+
+So far we've only done our example using pure server-side frameworks. What does it look like when we use a client-side framework?
+
+Moving into the `03-mern` example, I've built the same form example using a setup similar to the MERN stack. This new setup still uses Hono for the server, but it returns JSON data this time instead of directly rendering HTML:
+
+<details>
+	<summary>server/src/routes/posts.tsx</summary>
+
+```diff
+import { Hono } from "hono";
+import { z } from "zod";
+import { PrismaClient } from "@prisma/client";
+
+-import { NewPost } from "../components/views/NewPost";
+-import { PostList } from "../components/views/PostList";
+import { invariant } from "../utils/misc";
+
+export const posts = new Hono();
+const prisma = new PrismaClient();
+
+const titleMaxLength = 100;
+const tagMaxLength = 25;
+const contentMaxLength = 10000;
+
+export const PostEditorSchema = z.object({
+  title: z.string().min(1).max(titleMaxLength),
+  tags: z.array(z.string().min(1).max(tagMaxLength)).optional(),
+  content: z.string().min(1).max(contentMaxLength),
+});
+
+posts.get("/", async (c) => {
+  const posts = await prisma.post.findMany({
+    select: {
++      id: true,
+      title: true,
+      tags: true,
+      content: true,
+    },
+  });
+
+-  return c.html(<PostList posts={posts} />);
++  return c.json({ posts });
+});
+
+posts.post("/", async (c) => {
+  const { req } = c;
+  const formData = await req.formData();
+
+  const title = formData.get("title");
+  const content = formData.get("content");
+  const intent = formData.get("intent");
+
+  let tags: string[] = [];
+  for (let [key, value] of formData.entries()) {
+    if (key.startsWith("tags[") && key.endsWith("]")) {
+      //? Get the index number, e.g. tags[1] -> 1
+      const index = +key.slice(5, -1);
+      tags[index] = value;
+    }
+  }
+
+  invariant(typeof intent === "string", "intent must be a string");
+  invariant(typeof title === "string", "Title must be a string");
+  invariant(typeof content === "string", "Content must be a string");
+
+  if (intent.startsWith("list-insert")) {
+    tags.push("");
+-    return c.html(
+-      <NewPost status="idle" submission={{ title, tags, content }} />
+-    );
++    return c.json({
++      status: "idle",
++      submission: { title, tags, content },
++    });
+  }
+
+  if (intent.startsWith("list-remove")) {
+    const idx = +intent.split("/")[1];
+    tags.splice(idx, 1);
+-    return c.html(
+-      <NewPost status="idle" submission={{ title, tags, content }} />
+-    );
++    return c.json({
++      status: "idle",
++      submission: { title, tags, content },
++    });
+  }
+
+  if (intent === "submit") {
+    const result = PostEditorSchema.safeParse({
+      title,
+      tags,
+      content,
+    });
+
+    if (!result.success) {
+      const submission = { title, tags, content };
+-      return c.html(
+-        <NewPost
+-          status="error"
+-          errors={result.error.flatten()}
+-          submission={submission}
+-        />
+-      );
++      return c.json({
++        status: "error",
++        errors: result.error.flatten(),
++        submission: { title, tags, content },
++      });
+    }
+
+    await prisma.post.create({
+      data: {
+        title: result.data.title,
+        //? Can't store arrays in SQLite, so just turn em into a comma-separated string
+        tags: result.data.tags?.join(","),
+        content: result.data.content,
+      },
+    });
+
+-    return c.redirect("/posts");
++    return c.json({ status: "success" });
+  }
+});
+
+posts.get("/new", (c) => {
+-  return c.html(<NewPost status="idle" />);
++  return c.json({
++    status: "idle",
++  });
+});
+```
+
+</details>
+
+For the client side, we're essentially just replacing the `views` folder from the previous examples with a full-fledged Single Page Application (SPA) using React:
+
+<details>
+	<summary>client/src/routes/posts.new.tsx</summary>
+
+```tsx
+import React from "react";
+import { ErrorList } from "../components/ErrorList";
+import { useNavigate } from "react-router-dom";
+
+type PostSubmission = {
+  title: string;
+  content: string;
+  tags?: string[];
+};
+
+type PostFormState =
+  | {
+      status: "idle";
+      submission?: PostSubmission;
+    }
+  | {
+      status: "error";
+      errors: {
+        formErrors: string[];
+        fieldErrors: {
+          title: string[];
+          tags: string[];
+          content: string[];
+        };
+      };
+      submission: PostSubmission;
+    };
+
+function NewPostRoute() {
+  const [formState, setFormState] = React.useState<PostFormState>({
+    status: "idle",
+  });
+  const navigate = useNavigate();
+
+  const formErrors =
+    formState.status === "error" ? formState.errors.formErrors : null;
+  const fieldErrors =
+    formState.status === "error" ? formState.errors.fieldErrors : null;
+  const tagsList = formState.submission?.tags
+    ? formState.submission.tags.map((tag) => ({
+        //? We need a unique key to tell React how to
+        //? properly track changes in the list
+        key: crypto.randomUUID(),
+        value: tag,
+      }))
+    : [];
+
+  const formHasErrors = Boolean(formErrors?.length);
+  const titleHasErrors = Boolean(fieldErrors?.title?.length);
+  const contentHasErrors = Boolean(fieldErrors?.content?.length);
+
+  async function handleSubmit(
+    event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>
+  ) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const submitter = event.nativeEvent.submitter;
+    const formData = new FormData(form, submitter);
+
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/posts`, {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "success") {
+          navigate("/posts");
+        } else {
+          setFormState(data);
+        }
+      });
+  }
+
+  return (
+    <div className="mx-auto flex max-w-lg flex-col gap-8 p-8">
+      <a href="/posts">
+        <h1 className="text-3xl font-bold">&larr; New Post</h1>
+      </a>
+      <form
+        method="post"
+        className="flex flex-col gap-2"
+        onSubmit={handleSubmit}
+        aria-invalid={formHasErrors || undefined}
+        aria-describedby={formHasErrors ? "errors-form" : undefined}
+      >
+        <button name="intent" value="submit" type="submit" className="hidden" />
+        <label htmlFor="title" className="text-lg font-medium">
+          Title
+        </label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          defaultValue={formState?.submission?.title}
+          className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          autoFocus
+          aria-invalid={titleHasErrors || undefined}
+          aria-describedby={titleHasErrors ? "errors-title" : undefined}
+        />
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+          <ErrorList
+            id={titleHasErrors ? "errors-title" : undefined}
+            errors={fieldErrors?.title}
+          />
+        </div>
+        {/* We'll handle accessibility for the tag input list later! */}
+        <label htmlFor="tags" className="text-lg font-medium">
+          Tags
+        </label>
+        <ul id="tags" className="flex flex-col gap-2">
+          {tagsList.map(({ key, value }, idx) => (
+            <li key={key} className="flex items-center gap-2">
+              <input
+                type="text"
+                name={`tags[${idx}]`}
+                id={`tags[${idx}]`}
+                defaultValue={value}
+                className="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"
+              />
+              <button type="submit" name="intent" value={`list-remove/${idx}`}>
+                ❌
+              </button>
+            </li>
+          ))}
+        </ul>
+        {tagsList.length < 5 ? (
+          <button
+            type="submit"
+            name="intent"
+            value="list-insert"
+            className="self-start rounded-full bg-blue-600 px-4 py-2 text-xs text-center text-white disabled:bg-blue-400"
+          >
+            + Add Tag
+          </button>
+        ) : null}
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+          <ErrorList errors={fieldErrors?.tags} />
+        </div>
+        <label htmlFor="content" className="text-lg font-medium">
+          Content
+        </label>
+        <textarea
+          name="content"
+          id="content"
+          className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          defaultValue={formState?.submission?.content}
+          aria-invalid={contentHasErrors || undefined}
+          aria-describedby={contentHasErrors ? "errors-content" : undefined}
+        />
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+          <ErrorList
+            id={contentHasErrors ? "errors-content" : undefined}
+            errors={fieldErrors?.content}
+          />
+        </div>
+        <ErrorList
+          id={formHasErrors ? "errors-form" : undefined}
+          errors={formErrors}
+        />
+        <button
+          name="intent"
+          value="submit"
+          type="submit"
+          className="flex items-center justify-center gap-2 rounded-full bg-blue-600 py-2 text-center text-white disabled:bg-blue-400"
+        >
+          Submit
+        </button>
+      </form>
+    </div>
+  );
+}
+
+export default NewPostRoute;
+```
+
+</details>
+
+> [!NOTE]
+>
+> Unlike the previous examples, this example does not work if you disable JavaScript in your browser. This is because we've essentially split the app into two parts, and the client side SPA only communicates with the server using manual `fetch()` requests that requires JavaScript instead of default form submissions. Also, the dev server that's hosting the React SPA isn't the same as the Hono server, so even if we use default form submissions our client still doesn't have a way to handle the form data we'll be sending.
 
 ### Improve Data Fetching with React Router 6.4
 
-TODO: MERN v2 example
+As it currently stands, our React code seems to be a bit more complicated than our previous examples. This is mostly because we're manually re-implementing the default form submission behavior just to tell react to communicate with our Hono server. Fortunately, there are some modern tools that can streamline this process for us!
+
+Starting in version 6.4, [React Router](https://reactrouter.com/en/main) added a lot of features to streamline data fetching in React applications. Using special `loader()` and `action()` functions, we can take advantage of the Web Fetch API standards to communicate with our server more consistently:
+
+<details>
+	<summary>client/src/routes/posts.new.tsx</summary>
+
+```diff
+-import React from "react";
+import { ErrorList } from "../components/ErrorList";
+-import { useNavigate } from "react-router-dom";
++import {
++  redirect,
++  useActionData,
++  Form,
++  type ActionFunctionArgs,
++} from "react-router-dom";
+
+type PostSubmission = {
+  title: string;
+  content: string;
+  tags?: string[];
+};
+
+type PostFormState =
+  | {
+      status: "idle";
+      submission?: PostSubmission;
+    }
+  | {
+      status: "error";
+      errors: {
+        formErrors: string[];
+        fieldErrors: {
+          title: string[];
+          tags: string[];
+          content: string[];
+        };
+      };
+      submission: PostSubmission;
+    };
+
++// eslint-disable-next-line react-refresh/only-export-components
++export async function action({ request }: ActionFunctionArgs) {
++  const formData = await request.formData();
++
++  const state = await fetch(`${import.meta.env.VITE_BACKEND_URL}/posts`, {
++    method: "POST",
++    body: formData,
++  }).then((res) => res.json());
++
++  if (state.status === "success") {
++    return redirect("/posts");
++  }
++
++  return state;
++}
++
+function NewPostRoute() {
+-  const [formState, setFormState] = React.useState<PostFormState>({
+-    status: "idle",
+-  });
+-  const navigate = useNavigate();
++  const formState = useActionData() as PostFormState;
+
+  const formErrors =
+    formState?.status === "error" ? formState.errors.formErrors : null;
+  const fieldErrors =
+    formState?.status === "error" ? formState.errors.fieldErrors : null;
+  const tagsList = formState.submission?.tags
+    ? formState?.submission.tags.map((tag) => ({
+        //? We need a unique key to tell React how to
+        //? properly track changes in the list
+        key: crypto.randomUUID(),
+        value: tag,
+      }))
+    : [];
+
+  const formHasErrors = Boolean(formErrors?.length);
+  const titleHasErrors = Boolean(fieldErrors?.title?.length);
+  const contentHasErrors = Boolean(fieldErrors?.content?.length);
+
+-  async function handleSubmit(
+-    event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>
+-  ) {
+-    event.preventDefault();
+-    const form = event.currentTarget;
+-    const submitter = event.nativeEvent.submitter;
+-    const formData = new FormData(form, submitter);
+-
+-    fetch(`${import.meta.env.VITE_BACKEND_URL}/posts`, {
+-      method: "POST",
+-      body: formData,
+-    })
+-      .then((res) => res.json())
+-      .then((data) => {
+-        if (data.status === "success") {
+-          navigate("/posts");
+-        } else {
+-          setFormState(data);
+-        }
+-      });
+-  }
+-
+  return (
+    <div className="mx-auto flex max-w-lg flex-col gap-8 p-8">
+      <a href="/posts">
+        <h1 className="text-3xl font-bold">&larr; New Post</h1>
+      </a>
+-      <form
++      <Form
+        method="post"
+        className="flex flex-col gap-2"
+-        onSubmit={handleSubmit}
+        aria-invalid={formHasErrors || undefined}
+        aria-describedby={formHasErrors ? "errors-form" : undefined}
+      >
+        <button name="intent" value="submit" type="submit" className="hidden" />
+        <label htmlFor="title" className="text-lg font-medium">
+          Title
+        </label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          defaultValue={formState?.submission?.title}
+          className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          autoFocus
+          aria-invalid={titleHasErrors || undefined}
+          aria-describedby={titleHasErrors ? "errors-title" : undefined}
+        />
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+          <ErrorList
+            id={titleHasErrors ? "errors-title" : undefined}
+            errors={fieldErrors?.title}
+          />
+        </div>
+        {/* We'll handle accessibility for the tag input list later! */}
+        <label htmlFor="tags" className="text-lg font-medium">
+          Tags
+        </label>
+        <ul id="tags" className="flex flex-col gap-2">
+          {tagsList.map(({ key, value }, idx) => (
+            <li key={key} className="flex items-center gap-2">
+              <input
+                type="text"
+                name={`tags[${idx}]`}
+                id={`tags[${idx}]`}
+                defaultValue={value}
+                className="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"
+              />
+              <button type="submit" name="intent" value={`list-remove/${idx}`}>
+                ❌
+              </button>
+            </li>
+          ))}
+        </ul>
+        {tagsList.length < 5 ? (
+          <button
+            type="submit"
+            name="intent"
+            value="list-insert"
+            className="self-start rounded-full bg-blue-600 px-4 py-2 text-xs text-center text-white disabled:bg-blue-400"
+          >
+            + Add Tag
+          </button>
+        ) : null}
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+          <ErrorList errors={fieldErrors?.tags} />
+        </div>
+        <label htmlFor="content" className="text-lg font-medium">
+          Content
+        </label>
+        <textarea
+          name="content"
+          id="content"
+          className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          defaultValue={formState?.submission?.content}
+          aria-invalid={contentHasErrors || undefined}
+          aria-describedby={contentHasErrors ? "errors-content" : undefined}
+        />
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+          <ErrorList
+            id={contentHasErrors ? "errors-content" : undefined}
+            errors={fieldErrors?.content}
+          />
+        </div>
+        <ErrorList
+          id={formHasErrors ? "errors-form" : undefined}
+          errors={formErrors}
+        />
+        <button
+          name="intent"
+          value="submit"
+          type="submit"
+          className="flex items-center justify-center gap-2 rounded-full bg-blue-600 py-2 text-center text-white disabled:bg-blue-400"
+        >
+          Submit
+        </button>
+-      </form>
++      </Form>
+    </div>
+  );
+}
+
+export default NewPostRoute;
+```
+
+</details>
+
+<details>
+	<summary>client/src/main.tsx</summary>
+
+```diff
+import React from "react";
+import ReactDOM from "react-dom/client";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  redirect,
+} from "react-router-dom";
+
+-import PostsRoute from "./routes/posts.tsx";
++import PostsRoute, { loader as postsLoader } from "./routes/posts.tsx";
+-import NewPostRoute from "./routes/posts.new.tsx";
++import NewPostRoute, { action as newPostAction } from "./routes/posts.new.tsx";
+
+import "./index.css";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    loader: () => {
+      return redirect("/posts");
+    },
+  },
+  {
+    path: "/posts",
++    loader: postsLoader,
+    element: <PostsRoute />,
+  },
+  {
+    path: "/posts/new",
++    action: newPostAction,
+    element: <NewPostRoute />,
+  },
+]);
+
+<RouterProvider router={router} />;
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>
+);
+```
+
+</details>
 
 ## Full Stack Progressive Enhancement
 
-TODO: Remix v1 example
+Having an SPA frontend has its own advantages, but it really does suck that it requires client-side JavaScript to make our simple example work. The main problem lies in the fact that our server and client essentially became two separate apps using the "MERN" approach. Wouldn't it be nice if we can have the nice modern features of React but have it live in the same place as our server?
 
-### [TODO: sub-section name for Conform JS]
+This is where full stack React (meta-)frameworks ([Next.js](https://nextjs.org/), [Remix](https://remix.run/), etc.) come in. In a nutshell, these React frameworks combine server features and use React to [_progressively enhance_](https://www.epicweb.dev/the-webs-next-transition) the user experience on the client side. More importantly for us, these frameworks allow us to fall back to making full document requests if JavaScript is disabled on the browser, and serve everything in one place so our form submissions can get processed by the correct route handler.
 
-TODO: Remix v2 + MERN v3 example
+Moving on to the `04-remix` example, we have the form example rebuilt using Remix:
 
-OPTIONAL: Demo note editor with image upload example from EpicWeb
+<details>
+	<summary>app/routes/posts.new.tsx</summary>
+
+```tsx
+import { json, redirect, type ActionFunctionArgs } from "@remix-run/node";
+import { useActionData, Form } from "@remix-run/react";
+import { z } from "zod";
+
+import { prisma } from "~/utils/db.server";
+
+import { ErrorList } from "~/components/ErrorList";
+import { invariant } from "~/utils/misc";
+
+const titleMaxLength = 100;
+const tagMaxLength = 25;
+const contentMaxLength = 10000;
+
+export const PostEditorSchema = z.object({
+  title: z.string().min(1).max(titleMaxLength),
+  tags: z.array(z.string().min(1).max(tagMaxLength)).optional(),
+  content: z.string().min(1).max(contentMaxLength),
+});
+
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData();
+
+  const title = formData.get("title");
+  const content = formData.get("content");
+  const intent = formData.get("intent");
+
+  const tags: string[] = [];
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("tags[") && key.endsWith("]")) {
+      //? Get the index number, e.g. tags[1] -> 1
+      const index = +key.slice(5, -1);
+      tags[index] = value as string;
+    }
+  }
+
+  invariant(typeof intent === "string", "intent must be a string");
+  invariant(typeof title === "string", "Title must be a string");
+  invariant(typeof content === "string", "Content must be a string");
+
+  if (intent.startsWith("list-insert")) {
+    tags.push("");
+    return json({
+      status: "idle",
+      submission: { title, tags, content },
+    } as const);
+  }
+
+  if (intent.startsWith("list-remove")) {
+    const idx = +intent.split("/")[1];
+    tags.splice(idx, 1);
+    return json({
+      status: "idle",
+      submission: { title, tags, content },
+    } as const);
+  }
+
+  if (intent === "submit") {
+    const result = PostEditorSchema.safeParse({
+      title,
+      tags,
+      content,
+    });
+
+    if (!result.success) {
+      return json({
+        status: "error",
+        errors: result.error.flatten(),
+        submission: { title, tags, content },
+      } as const);
+    }
+
+    await prisma.post.create({
+      data: {
+        title: result.data.title,
+        //? Can't store arrays in SQLite, so just turn em into a comma-separated string
+        tags: result.data.tags?.join(","),
+        content: result.data.content,
+      },
+    });
+
+    return redirect("/posts");
+  }
+}
+
+function NewPostRoute() {
+  const formState = useActionData<typeof action>();
+
+  const formErrors =
+    formState?.status === "error" ? formState?.errors.formErrors : null;
+  const fieldErrors =
+    formState?.status === "error" ? formState?.errors.fieldErrors : null;
+  const tagsList = formState?.submission?.tags
+    ? formState.submission.tags.map((tag) => ({
+        //? We need a unique key to tell React how to
+        //? properly track changes in the list
+        key: crypto.randomUUID(),
+        value: tag,
+      }))
+    : [];
+
+  const formHasErrors = Boolean(formErrors?.length);
+  const titleHasErrors = Boolean(fieldErrors?.title?.length);
+  const contentHasErrors = Boolean(fieldErrors?.content?.length);
+
+  return (
+    <div className="mx-auto flex max-w-lg flex-col gap-8 p-8">
+      <a href="/posts">
+        <h1 className="text-3xl font-bold">&larr; New Post</h1>
+      </a>
+      <Form
+        method="post"
+        className="flex flex-col gap-2"
+        aria-invalid={formHasErrors || undefined}
+        aria-describedby={formHasErrors ? "errors-form" : undefined}
+      >
+        <button name="intent" value="submit" type="submit" className="hidden" />
+        <label htmlFor="title" className="text-lg font-medium">
+          Title
+        </label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          defaultValue={formState?.submission.title}
+          className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          autoFocus
+          aria-invalid={titleHasErrors || undefined}
+          aria-describedby={titleHasErrors ? "errors-title" : undefined}
+        />
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+          <ErrorList
+            id={titleHasErrors ? "errors-title" : undefined}
+            errors={fieldErrors?.title}
+          />
+        </div>
+        {/* We'll handle accessibility for the tag input list later! */}
+        <label htmlFor="tags" className="text-lg font-medium">
+          Tags
+        </label>
+        <ul id="tags" className="flex flex-col gap-2">
+          {tagsList.map(({ key, value }, idx) => (
+            <li key={key} className="flex items-center gap-2">
+              <input
+                type="text"
+                name={`tags[${idx}]`}
+                id={`tags[${idx}]`}
+                defaultValue={value}
+                className="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"
+              />
+              <button type="submit" name="intent" value={`list-remove/${idx}`}>
+                ❌
+              </button>
+            </li>
+          ))}
+        </ul>
+        {tagsList.length < 5 ? (
+          <button
+            type="submit"
+            name="intent"
+            value="list-insert"
+            className="self-start rounded-full bg-blue-600 px-4 py-2 text-xs text-center text-white disabled:bg-blue-400"
+          >
+            + Add Tag
+          </button>
+        ) : null}
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+          <ErrorList errors={fieldErrors?.tags} />
+        </div>
+        <label htmlFor="content" className="text-lg font-medium">
+          Content
+        </label>
+        <textarea
+          name="content"
+          id="content"
+          className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          defaultValue={formState?.submission.content}
+          aria-invalid={contentHasErrors || undefined}
+          aria-describedby={contentHasErrors ? "errors-content" : undefined}
+        />
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+          <ErrorList
+            id={contentHasErrors ? "errors-content" : undefined}
+            errors={fieldErrors?.content}
+          />
+        </div>
+        <ErrorList
+          id={formHasErrors ? "errors-form" : undefined}
+          errors={formErrors}
+        />
+        <button
+          name="intent"
+          value="submit"
+          type="submit"
+          className="flex items-center justify-center gap-2 rounded-full bg-blue-600 py-2 text-center text-white disabled:bg-blue-400"
+        >
+          Submit
+        </button>
+      </Form>
+    </div>
+  );
+}
+
+export default NewPostRoute;
+```
+
+</details>
+
+Notice something cool?
+
+In the Remix example, the `action()` function looks almost identical to the `router.post()` handler from the Express and Hono examples, while the React component lives in the same file!
+
+Even better, the form actually works again even when JavaScript is disabled in the browser. It simply uses the default form submission before JavaScript loads, and then switches to doing `fetch()` requests once JavaScript is fully loaded. In both cases, the `action()` handler knows exactly what to do to send the correct data back to us!
+
+### Simplify Form Input Management with Conform
+
+We've gone a really long way from the first example with only two simple text input fields! There's one more improvement we can do for our form before we wrap up.
+
+If you're thinking that there seems to be a lot of repetition when we add the proper HTML and ARIA attributes to our inputs and labels, you're not alone! Wouldn't it be nice to make our Zod schema the single source of truth and have some nice utilities that automatically generate the correct attributes for our form fields based on the shape of our schema? Luckily for us, there are open-source form libraries that can help us with that!
+
+For this example, we're going to use [Conform](https://conform.guide/) with its adapter for Zod schemas to streamline the logic for our form:
+
+<details>
+	<summary>app/routes/posts.new.tsx</summary>
+
+```diff
++import { conform, useForm, useFieldList, list } from "@conform-to/react";
++import { getFieldsetConstraint, parse } from "@conform-to/zod";
+import { json, redirect, type ActionFunctionArgs } from "@remix-run/node";
+import { useActionData, Form } from "@remix-run/react";
+import { z } from "zod";
+
+import { prisma } from "~/utils/db.server";
+
+import { ErrorList } from "~/components/ErrorList";
+-import { invariant } from "~/utils/misc";
+
+const titleMaxLength = 100;
+const tagMaxLength = 25;
+const contentMaxLength = 10000;
+
+export const PostEditorSchema = z.object({
+  title: z.string().min(1).max(titleMaxLength),
+  tags: z.array(z.string().min(1).max(tagMaxLength)).optional(),
+  content: z.string().min(1).max(contentMaxLength),
+});
+
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData();
+
+-  const title = formData.get("title");
+-  const content = formData.get("content");
+-  const intent = formData.get("intent");
+-
+-  const tags: string[] = [];
+-  for (const [key, value] of formData.entries()) {
+-    if (key.startsWith("tags[") && key.endsWith("]")) {
+-      //? Get the index number, e.g. tags[1] -> 1
+-      const index = +key.slice(5, -1);
+-      tags[index] = value as string;
+-    }
+-  }
+-
+-  invariant(typeof intent === "string", "intent must be a string");
+-  invariant(typeof title === "string", "Title must be a string");
+-  invariant(typeof content === "string", "Content must be a string");
+-
+-  if (intent.startsWith("list-insert")) {
+-    tags.push("");
+-    return json({
+-      status: "idle",
+-      submission: { title, tags, content },
+-    } as const);
+-  }
+-
+-  if (intent.startsWith("list-remove")) {
+-    const idx = +intent.split("/")[1];
+-    tags.splice(idx, 1);
+-    return json({
+-      status: "idle",
+-      submission: { title, tags, content },
+-    } as const);
+-  }
+-
+-  if (intent === "submit") {
+-    const result = PostEditorSchema.safeParse({
+-      title,
+-      tags,
+-      content,
+-    });
+-    if (!result.success) {
+-      return json({
+-        status: "error",
+-        errors: result.error.flatten(),
+-        submission: { title, tags, content },
+-      } as const);
+-    }
++  const submission = parse(formData, { schema: PostEditorSchema });
++
++  if (submission.intent !== "submit") {
++    return json({ status: "idle", submission } as const);
++  }
++  if (!submission.value) {
++    return json({ status: "error", submission } as const);
++  }
++
++  const { title, tags, content } = submission.value;
+  await prisma.post.create({
+    data: {
+-      title: result.data.title,
++      title,
+-      //? Can't store arrays in SQLite, so just turn em into a comma-separated string
+-      tags: result.data.tags?.join(","),
++      tags: tags?.join(","),
+-      content: result.data.content,
++      content,
+    },
+  });
+
+  return redirect("/posts");
+-  }
+}
+
+function NewPostRoute() {
+  const formState = useActionData<typeof action>();
+
+-  const formErrors =
+-    formState?.status === "error" ? formState?.errors.formErrors : null;
+-  const fieldErrors =
+-    formState?.status === "error" ? formState?.errors.fieldErrors : null;
+-  const tagsList = formState?.submission?.tags
+-    ? formState.submission.tags.map((tag) => ({
+-        //? We need a unique key to tell React how to
+-        //? properly track changes in the list
+-        key: crypto.randomUUID(),
+-        value: tag,
+-      }))
+-    : [];
+-
+-  const formHasErrors = Boolean(formErrors?.length);
+-  const titleHasErrors = Boolean(fieldErrors?.title?.length);
+-  const contentHasErrors = Boolean(fieldErrors?.content?.length);
++  const [form, fields] = useForm({
++    id: "post-editor",
++    constraint: getFieldsetConstraint(PostEditorSchema),
++    lastSubmission: formState?.submission,
++    onValidate({ formData }) {
++      return parse(formData, { schema: PostEditorSchema });
++    },
++  });
++
++  const tagsList = useFieldList(form.ref, fields.tags);
+
+  return (
+    <div className="mx-auto flex max-w-lg flex-col gap-8 p-8">
+      <a href="/posts">
+        <h1 className="text-3xl font-bold">&larr; New Post</h1>
+      </a>
+-      <Form
+-        method="post"
+-        className="flex flex-col gap-2"
+-        aria-invalid={formHasErrors || undefined}
+-        aria-describedby={formHasErrors ? "errors-form" : undefined}
+-      >
++      <Form method="post" className="flex flex-col gap-2" {...form.props}>
+        <button name="intent" value="submit" type="submit" className="hidden" />
+        <label htmlFor="title" className="text-lg font-medium">
+          Title
+        </label>
+        <input
+          type="text"
+          id="title"
+-          name="title"
+-          defaultValue={formState?.submission.title}
+          className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          autoFocus
+-          aria-invalid={titleHasErrors || undefined}
+-          aria-describedby={titleHasErrors ? "errors-title" : undefined}
++          {...conform.input(fields.title)}
+        />
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+-          <ErrorList
+-            id={titleHasErrors ? "errors-title" : undefined}
+-            errors={fieldErrors?.title}
+-          />
++          <ErrorList id={fields.title.errorId} errors={fields.title.errors} />
+        </div>
+-        {/* We'll handle accessibility for the tag input list later! */}
+        <label htmlFor="tags" className="text-lg font-medium">
+          Tags
+        </label>
+        <ul id="tags" className="flex flex-col gap-2">
+-          {tagsList.map(({ key, value }, idx) => (
++          {tagsList.map((tag, idx) => (
+-            <li key={key} className="flex items-center gap-2">
++            <li key={tag.key} className="flex items-center gap-2">
+              <input
+                type="text"
+-                name={`tags[${idx}]`}
+-                id={`tags[${idx}]`}
+-                defaultValue={value}
+                className="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"
++                {...conform.input(tag)}
+              />
+-              <button type="submit" name="intent" value={`list-remove/${idx}`}>
++              <button
++                type="submit"
++                {...list.remove(fields.tags.name, { index: idx })}
++              >
+                ❌
+              </button>
++              <ErrorList id={tag.errorId} errors={tag.errors} />
+            </li>
+          ))}
+        </ul>
+        {tagsList.length < 5 ? (
+          <button
+            type="submit"
+-            name="intent"
+-            value="list-insert"
+            className="self-start rounded-full bg-blue-600 px-4 py-2 text-xs text-center text-white disabled:bg-blue-400"
++            {...list.insert(fields.tags.name, { defaultValue: "" })}
+          >
+            + Add Tag
+          </button>
+        ) : null}
+-        <div className="min-h-[32px] px-4 pb-3 pt-1">
+-          <ErrorList errors={fieldErrors?.tags} />
+-        </div>
+        <label htmlFor="content" className="text-lg font-medium">
+          Content
+        </label>
+        <textarea
+-          name="content"
+-          id="content"
+          className="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+-          defaultValue={formState?.submission.content}
+-          aria-invalid={contentHasErrors || undefined}
+-          aria-describedby={contentHasErrors ? "errors-content" : undefined}
++          {...conform.textarea(fields.content)}
+        />
+        <div className="min-h-[32px] px-4 pb-3 pt-1">
+          <ErrorList
+-            id={contentHasErrors ? "errors-content" : undefined}
++            id={fields.content.errorId}
+-            errors={fieldErrors?.content}
++            errors={fields.content.errors}
+          />
+        </div>
+-        <ErrorList
+-          id={formHasErrors ? "errors-form" : undefined}
+-          errors={formErrors}
+-        />
++        <ErrorList id={form.errorId} errors={form.errors} />
+        <button
+          name="intent"
+          value="submit"
+          type="submit"
+          className="flex items-center justify-center gap-2 rounded-full bg-blue-600 py-2 text-center text-white disabled:bg-blue-400"
+        >
+          Submit
+        </button>
+      </Form>
+    </div>
+  );
+}
+
+export default NewPostRoute;
+```
+
+</details>
+
+Phew, that's a lot of code we just trimmed down! What's more, Conform has actually added other important attributes we may have missed earlier, and they're all consistent for all of the inputs and labels inside our form!
+
+<!-- NOTE: This might be a good place to put another screenshot -->
+
+> [!TIP]
+>
+> Conform is actually built to support both React Router and Remix! If you're interested to see how it works for the `03-mern` example, feel free to check out the `v3-conform` folder in the `client` as well as the `posts.v2.tsx` file in the `server`.
+
+<!-- OPTIONAL: Demo note editor with image upload example from EpicWeb -->
+
+Building web forms looks simple at first glance, but it can get surprisingly complex with all of the little things we need to look out for! By learning the common web standards, we can use our knowledge to architect a consistent API across servers and clients, making our lives easier as we continue to add more complex features in our web applications.
