@@ -1,10 +1,16 @@
 # The FormData API: Craft Better Web Forms Using Web Standards
 
-TODO: Intro
+Forms are an essential part of web applications. In many introductory courses for web development, forms are often one of the very first topics that are taught as part of learning the basics of HTML. Yet despite looking straightforward to build at first glance, real-world examples of web forms can have a lot of complexities hidden just beneath the surface. Here are some questions you might consider when building web forms with real-world requirements:
+
+- What happens to the data when a user submits the form?
+- How can we validate user inputs according to a certain set of requirements?
+- How can we show error messages properly in case the user makes some invalid inputs?
+- How can we keep track of the user inputs so that they don't lose progress when certain events refresh the page (e.g. after validating inputs)?
+- How do we manage the application state so that we can make the above bullet points play nicely with each other?
+
+As we add more features to our web applications, our forms gradually become more complex as well to keep up with new and/or uppdated requirements! Fortunately, the web development ecosystem provides various tools, standards, open-source libraries, etc. to help keep managing these increasing complxities a lot more bearable. Let's take a look at some examples!
 
 ## Example: A Simple Form
-
-[WIP: Express starter example]
 
 Let's start with a simple example. Consider the following demo application where a user can submit a post with a `title` and some `content`:
 
@@ -2004,3 +2010,9 @@ Phew, that's a lot of code we just trimmed down! What's more, Conform has actual
 <!-- OPTIONAL: Demo note editor with image upload example from EpicWeb -->
 
 Building web forms looks simple at first glance, but it can get surprisingly complex with all of the little things we need to look out for! By learning the common web standards, we can use our knowledge to architect a consistent API across servers and clients, making our lives easier as we continue to add more complex features in our web applications.
+
+## What's next?
+
+Another really cool thing about building with web standards in mind is that we are able to use the same workflow across different technologies that follow the same standards. I mean, just take a look at how many different ways we've built the same example app, yet we managed to keep a lot of the code looking almost the exact same, and instead of being held back by the differences between frameworks or even languages, we can leverage the unique tools each of them offers to make the experience a lot better not just for the user that interacts with our applications, but also for us developers who keep iterating to keep up with new and updated requirements as they come up.
+
+If you've gotten this far, I want to encourage you to keep playing with the topics we've covered today. Try to build more examples using different frameworks, even those that are completely unfamiliar to you! Want to use Vue+Nuxt? or Svelte+SvelteKit? How about Go+HTMX? Use the web standards as a starting point to build a baseline application that has most if not all of the nice things we've covered in the previous examples, then dive deeper in the technologies you chose and see what utilities they offer to make the experience even better for both users and developers alike.
