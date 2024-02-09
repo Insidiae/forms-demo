@@ -774,11 +774,11 @@ async function logMovies() {
 }
 ```
 
-The Web Fetch API extends this process to make fetching data more consistent between the server and the client. The Web Fetch API gives us [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) and [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects containing the information we need to ...
+The Web Fetch API extends this process to make fetching data more consistent between the server and the client. The Web Fetch API gives us [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) and [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) objects (and more!) containing the information we need, both to for the server to gain additional context that might help the handler function decide what kind of data to send back, and for the client to turn whatever data the server does send back into a corresponding visible change in the UI. Either way, these objects look the same in both server and client, so you'll often find the code that works with these objects will look pretty similar as well!
 
 In practice, using the Web Fetch API in our form example is relatively simple. Since we're already using native form submissions, we're already supplying the `Request` part whenever the user submits the form. All we need to do is handle that `Request` in our route handlers using the Web Fetch API.
 
-This is what the `express.urlencoded()` middleware already does for us, except the parsed form data is converted into an object and put into Express' `req.body`. Let's look at another example using a different framework that allows us to play with the Web Fetch API ourselves. Moving into the `02-hono` example, we have the same app built using [Hono](https://hono.dev/):
+This is what the `express.urlencoded()` middleware already does for us, except the parsed form data is converted into an object and put into Express' `req.body`. Let's look at another example using a different framework that allows us to play with the Web Fetch API ourselves. Moving into the [`02-hono`](./02-hono/) example, we have the same app built using [Hono](https://hono.dev/):
 
 <details>
 	<summary>src/routes/posts.tsx</summary>
@@ -936,7 +936,7 @@ Instead of getting the data from Express' `req.body` (which itself needs a middl
 
 So far we've only done our example using pure server-side frameworks. What does it look like when we use a client-side framework?
 
-Moving into the `03-mern` example, I've built the same form example using a setup similar to the MERN stack. This new setup still uses Hono for the server, but it returns JSON data this time instead of directly rendering HTML:
+Moving into the [`03-mern`](./03-mern/) example, I've built the same form example using a setup similar to the MERN stack. This new setup still uses Hono for the server, but it returns JSON data this time instead of directly rendering HTML:
 
 <details>
 	<summary>server/src/routes/posts.tsx</summary>
@@ -1522,7 +1522,7 @@ Having an SPA frontend has its own advantages, but it really does suck that it r
 
 This is where full stack React (meta-)frameworks ([Next.js](https://nextjs.org/), [Remix](https://remix.run/), etc.) come in. In a nutshell, these React frameworks combine server features and use React to [_progressively enhance_](https://www.epicweb.dev/the-webs-next-transition) the user experience on the client side. More importantly for us, these frameworks allow us to fall back to making full document requests if JavaScript is disabled on the browser, and serve everything in one place so our form submissions can get processed by the correct route handler.
 
-Moving on to the `04-remix` example, we have the form example rebuilt using Remix:
+Moving on to the [`04-remix`](./04-remix/) example, we have the form example rebuilt using Remix:
 
 <details>
 	<summary>app/routes/posts.new.tsx</summary>
