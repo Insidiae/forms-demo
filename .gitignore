@@ -3,6 +3,9 @@ dist
 .wrangler
 .dev.vars
 
+.venv
+__pycache__
+
 # Change them to your taste:
 wrangler.toml
 # package-lock.json
