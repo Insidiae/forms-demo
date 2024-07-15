@@ -53,7 +53,7 @@ function NewPostRoute() {
     formState?.status === "error" ? formState.errors.formErrors : null;
   const fieldErrors =
     formState?.status === "error" ? formState.errors.fieldErrors : null;
-  const tagsList = formState.submission?.tags
+  const tagsList = formState?.submission?.tags
     ? formState.submission.tags.map((tag) => ({
         //? We need a unique key to tell React how to
         //? properly track changes in the list

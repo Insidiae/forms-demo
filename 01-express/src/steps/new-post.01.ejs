@@ -1,9 +1,13 @@
+<%_ const formErrors = status === "error" ? errors.formErrors : null -%>
+<%_ const fieldErrors = status === "error" ? errors.fieldErrors : null -%>
+<%_ const formHasErrors = Boolean(formErrors?.length); -%>
+<%_ const titleHasErrors = Boolean(fieldErrors?.title?.length); -%>
+<%_ const contentHasErrors = Boolean(fieldErrors?.content?.length); -%>
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- We'll use Tailwind CSS to generate this stylesheet -->
     <link rel="stylesheet" href="/styles.css" />
     <title>Create New Post | Forms Demo</title>
   </head>
@@ -22,7 +26,9 @@
           autofocus
         />
         <div class="min-h-[32px] px-4 pb-3 pt-1">
-          <!-- If there are errors for the title, render an error list here! -->
+          <% if(fieldErrors?.title) { %>
+            <%- include("partials/error-list", { errors: fieldErrors.title, id: titleHasErrors ? "errors-title" : undefined }) %>
+          <% } %>
         </div>
 
         <label htmlFor="content" class="text-lg font-medium">Content</label>
@@ -32,10 +38,14 @@
           class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
         ></textarea>
         <div class="min-h-[32px] px-4 pb-3 pt-1">
-          <!-- If there are errors for the content, render an error list here! -->
+          <% if(fieldErrors?.content) { %>
+            <%- include("partials/error-list", { errors: fieldErrors.content, id: contentHasErrors ? "errors-content" : undefined }) %>
+          <% } %>
         </div>
 
-        <!-- While we're at it, let's also render an error list here in case the form itself has errors -->
+        <% if(formErrors) { %>
+          <%- include("partials/error-list", { errors: formErrors, id: formHasErrors ? "errors-form" : undefined }) %>
+        <% } %>
 
         <button
           name="intent"
@@ -45,7 +55,7 @@
         >
           Submit
         </button>
-      </label>
+      </form>
     </div>
   </body>
 </html>

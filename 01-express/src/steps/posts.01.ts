@@ -2,6 +2,7 @@ import express from "express";
 import { PrismaClient } from "@prisma/client";
 
 import { invariant } from "../utils/misc";
+
 const prisma = new PrismaClient();
 
 const router = express.Router();
@@ -23,7 +24,6 @@ router
     const posts = await prisma.post.findMany({
       select: {
         title: true,
-        tags: true,
         content: true,
       },
     });
@@ -36,6 +36,9 @@ router
     const title = formData.title;
     const content = formData.content;
 
+    invariant(typeof title === "string", "Title must be a string");
+    invariant(typeof content === "string", "Content must be a string");
+
     const errors: ActionErrors = {
       formErrors: [],
       fieldErrors: {
@@ -43,9 +46,6 @@ router
         content: [],
       },
     };
-
-    invariant(typeof title === "string", "Title must be a string");
-    invariant(typeof content === "string", "Content must be a string");
 
     if (title === "") {
       errors.fieldErrors.title.push("Title is required");
@@ -63,15 +63,19 @@ router
       );
     }
 
+    if (title.includes("error")) {
+      errors.formErrors.push("There is an error in your submission.");
+    }
+
     const hasErrors =
       errors.formErrors.length ||
       Object.values(errors.fieldErrors).some(
         (fieldErrors) => fieldErrors.length
       );
     if (hasErrors) {
-      return res.render("new-post-v1", {
+      return res.render("new-post", {
         status: "error",
-        submission: { title, content },
+        submission: null,
         errors,
       });
     }
@@ -84,7 +88,7 @@ router
   });
 
 router.route("/new").get((req, res) => {
-  res.render("new-post-v1", {
+  res.render("new-post", {
     status: "idle",
     submission: null,
     errors: null,

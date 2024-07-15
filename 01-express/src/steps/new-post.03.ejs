@@ -1,6 +1,5 @@
 <%_ const formErrors = status === "error" ? errors.formErrors : null -%>
 <%_ const fieldErrors = status === "error" ? errors.fieldErrors : null -%>
-<%_ const tagsList = submission?.tags ?? [] -%>
 <%_ const formHasErrors = Boolean(formErrors?.length); -%>
 <%_ const titleHasErrors = Boolean(fieldErrors?.title?.length); -%>
 <%_ const contentHasErrors = Boolean(fieldErrors?.content?.length); -%>
@@ -26,19 +25,13 @@
         aria-describedby="errors-form"
         <%_ } -%>
       >
-        <button
-          name="intent"
-          value="submit"
-          type="submit"
-          class="hidden"
-        ></button>
         <label htmlFor="title" class="text-lg font-medium">Title</label>
         <input
           type="text"
           id="title"
           name="title"
-          value="<%=submission?.title %>"
           class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          value="<%=submission?.title %>"
           autofocus
           <%_ if (titleHasErrors) { -%>
           aria-invalid="true"
@@ -46,41 +39,11 @@
           <%_ } -%>
         />
         <div class="min-h-[32px] px-4 pb-3 pt-1">
-          <% if(fieldErrors?.title) { %> <%- include("partials/error-list", {
-          errors: fieldErrors.title, id: titleHasErrors ? "errors-title" : undefined }) %> <% } %>
+          <% if(fieldErrors?.title) { %>
+            <%- include("partials/error-list", { errors: fieldErrors.title, id: titleHasErrors ? "errors-title" : undefined }) %>
+          <% } %>
         </div>
-        <!-- We'll handle accessibility for the tag input list later! -->
-        <label for="tags" class="text-lg font-medium">Tags</label>
-        <ul id="tags" class="flex flex-col gap-2">
-          <%_tagsList.map((tag, idx) => { %>
-          <li class="flex items-center gap-2">
-            <input
-              type="text"
-              name="tags[<%=idx %>]"
-              id="tags[<%=idx %>]"
-              value="<%=tag %>"
-              class="text-xs rounded-md border border-black p-2 disabled:bg-slate-200"
-            />
-            <button type="submit" name="intent" value="list-remove/<%=idx %>">
-              ❌
-            </button>
-          </li>
-          <%_ })%>
-        </ul>
-        <%_if (tagsList.length < 5) { %>
-        <button
-          type="submit"
-          name="intent"
-          value="list-insert"
-          class="self-start rounded-full bg-blue-600 px-4 py-2 text-xs text-center text-white disabled:bg-blue-400"
-        >
-          + Add Tag
-        </button>
-        <%_ } %>
-        <div class="min-h-[32px] px-4 pb-3 pt-1">
-          <% if(fieldErrors?.tags) { %> <%- include("partials/error-list", {
-          errors: fieldErrors.tags, id: "errors-tags" }) %> <% } %>
-        </div>
+
         <label htmlFor="content" class="text-lg font-medium">Content</label>
         <textarea
           name="content"
@@ -90,15 +53,17 @@
           aria-invalid="true"
           aria-describedby="errors-content"
           <%_ } -%>
-        >
-<%=submission?.content %></textarea
-        >
+        ><%=submission?.content %></textarea>
         <div class="min-h-[32px] px-4 pb-3 pt-1">
-          <% if(fieldErrors?.content) { %> <%- include("partials/error-list", {
-          errors: fieldErrors.content, id: contentHasErrors ? "errors-content" : undefined }) %> <% } %>
+          <% if(fieldErrors?.content) { %>
+            <%- include("partials/error-list", { errors: fieldErrors.content, id: contentHasErrors ? "errors-content" : undefined }) %>
+          <% } %>
         </div>
-        <% if(formErrors) { %> <%- include("partials/error-list", { errors:
-        formErrors, id: formHasErrors ? "errors-form" : undefined }) %> <% } %>
+
+        <% if(formErrors) { %>
+          <%- include("partials/error-list", { errors: formErrors, id: formHasErrors ? "errors-form" : undefined }) %>
+        <% } %>
+
         <button
           name="intent"
           value="submit"

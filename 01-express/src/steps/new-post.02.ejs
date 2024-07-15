@@ -16,56 +16,38 @@
       <a href="/posts">
         <h1 class="text-3xl font-bold">&larr; New Post</h1>
       </a>
-      <form
-        action="/posts"
-        method="post"
-        class="flex flex-col gap-2"
-        <%_ if (formHasErrors) { -%>
-        aria-invalid="true"
-        aria-describedby="errors-form"
-        <%_ } -%>
-      >
-        <button
-          name="intent"
-          value="submit"
-          type="submit"
-          class="hidden"
-        ></button>
+      <form action="/posts" method="post" class="flex flex-col gap-2">
         <label htmlFor="title" class="text-lg font-medium">Title</label>
         <input
           type="text"
           id="title"
           name="title"
-          value="<%=submission?.title %>"
           class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
+          value="<%=submission?.title %>"
           autofocus
-          <%_ if (titleHasErrors) { -%>
-          aria-invalid="true"
-          aria-describedby="errors-title"
-          <%_ } -%>
         />
         <div class="min-h-[32px] px-4 pb-3 pt-1">
-          <% if(fieldErrors?.title) { %> <%- include("partials/error-list", {
-          errors: fieldErrors.title, id: titleHasErrors ? "errors-title" : undefined }) %> <% } %>
+          <% if(fieldErrors?.title) { %>
+            <%- include("partials/error-list", { errors: fieldErrors.title, id: titleHasErrors ? "errors-title" : undefined }) %>
+          <% } %>
         </div>
+
         <label htmlFor="content" class="text-lg font-medium">Content</label>
         <textarea
           name="content"
           id="content"
           class="mb-2 rounded-md border border-black p-2 disabled:bg-slate-200"
-          <%_ if (contentHasErrors) { -%>
-          aria-invalid="true"
-          aria-describedby="errors-content"
-          <%_ } -%>
-        >
-<%=submission?.content %></textarea
-        >
+        ><%=submission?.content %></textarea>
         <div class="min-h-[32px] px-4 pb-3 pt-1">
-          <% if(fieldErrors?.content) { %> <%- include("partials/error-list", {
-          errors: fieldErrors.content, id: contentHasErrors ? "errors-content" : undefined }) %> <% } %>
+          <% if(fieldErrors?.content) { %>
+            <%- include("partials/error-list", { errors: fieldErrors.content, id: contentHasErrors ? "errors-content" : undefined }) %>
+          <% } %>
         </div>
-        <% if(formErrors) { %> <%- include("partials/error-list", { errors:
-        formErrors, id: formHasErrors ? "errors-form" : undefined }) %> <% } %>
+
+        <% if(formErrors) { %>
+          <%- include("partials/error-list", { errors: formErrors, id: formHasErrors ? "errors-form" : undefined }) %>
+        <% } %>
+
         <button
           name="intent"
           value="submit"

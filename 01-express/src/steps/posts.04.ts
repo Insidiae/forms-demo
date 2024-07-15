@@ -1,6 +1,6 @@
 import express from "express";
-import { z } from "zod";
 import { PrismaClient } from "@prisma/client";
+import { z } from "zod";
 
 import { invariant } from "../utils/misc";
 
@@ -32,7 +32,6 @@ router
     return res.render("posts-list", { posts });
   })
   .post(async (req, res) => {
-    //? `express.urlencoded()` gives us the form data in `req.body`
     const formData = req.body;
 
     const title = formData.title;
@@ -55,7 +54,7 @@ router
 
     if (intent === "list-insert") {
       tags.push("");
-      return res.render("new-post-v2", {
+      return res.render("new-post", {
         status: "idle",
         submission: { title, tags, content },
         errors: null,
@@ -65,7 +64,7 @@ router
     if (intent.startsWith("list-remove")) {
       const idx = +intent.split("/")[1];
       tags.splice(idx, 1);
-      return res.render("new-post-v2", {
+      return res.render("new-post", {
         status: "idle",
         submission: { title, tags, content },
         errors: null,
@@ -77,8 +76,9 @@ router
       tags,
       content,
     });
+
     if (!result.success) {
-      return res.render("new-post-v2", {
+      return res.render("new-post", {
         status: "error",
         submission: { title, tags, content },
         errors: result.error.flatten(),
@@ -98,7 +98,7 @@ router
   });
 
 router.route("/new").get((req, res) => {
-  res.render("new-post-v2", {
+  res.render("new-post", {
     status: "idle",
     submission: null,
     errors: null,
